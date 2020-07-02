@@ -47,3 +47,6 @@ error.business_trade_name.maxLength                             = Mae’n rhaid 
 error.business_trade_name.duplicate                             = Ni allwch nodi’r un peth ar gyfer masnach busnes ac enw’r busnes
 error.business_trade_name.invalid                               = Mae’n rhaid i fasnach y busnes gynnwys y llythrennau a i z, cysylltnodau, bylchau a chollnodau yn unig
 
+#Business accounting method errors
+error.business_accounting_method.invalid                                 = Dewiswch sut rydych chi’n cofnodi’ch incwm a’ch treuliau ar gyfer eich busnes hunangyflogedig
+error.business_accounting-method.empty                                   = Dewiswch sut rydych chi’n cofnodi’ch incwm a’ch treuliau ar gyfer eich busnes hunangyflogedig
