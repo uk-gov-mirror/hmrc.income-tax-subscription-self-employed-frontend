@@ -41,10 +41,14 @@
 * put all all default assets for this service here
 *@
 @defaultScriptElem = {
-    @scriptElem.fold(HtmlFormat.empty)(x => x)
+    <script type="text/javascript" src=@routes.Assets.at("javascripts/mtd_itse_custom.js")></script>
+    <script type="text/javascript" src=@routes.Assets.at("javascripts/ur-banner.js")></script>
+        @* append custom scripts *@
+@scriptElem.fold(HtmlFormat.empty)(x => x)
 }
 
 @headStyle = {
+    <link rel="stylesheet" href=@routes.Assets.at("stylesheets/mtd_itse_custom.css")>
     <link rel="stylesheet" href=@routes.Assets.at("stylesheets/banner-panel.css")>
 }
 

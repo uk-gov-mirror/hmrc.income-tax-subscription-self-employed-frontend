@@ -17,10 +17,56 @@
 @import play.api.data.Form
 @import uk.gov.hmrc.play.views.html.helpers.form
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.AppConfig
-
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.templates.main_template
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.AccountingMethodModel
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.helpers._
+@import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.BusinessAccountingMethodForm._
+@import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.submapping.AccountingMethodMapping
+@import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.helpers.RadioOption
+
 
 @(businessAccountingMethodForm: Form[AccountingMethodModel], postAction: Call, backUrl: String)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
+@question = @{
+    messages("business.accounting_method.heading")
+}
+
+@accordionInfo = {
+    <p>@messages("business.accounting_method.accordion.line_1")</p>
+    <ul class="bullets">
+        <li>@messages("business.accounting_method.accordion.bullet_1")</li>
+        <li>@messages("business.accounting_method.accordion.bullet_2")</li>
+    </ul>
+}
+
+@scripts = {
+    <link rel="stylesheet" href=@routes.Assets.at("stylesheets/accounting_method_radio_fix.css")>
+}
+
+
+@main_template(title = messages("business.accounting_method.title"), form = Some(businessAccountingMethodForm), scriptElem = Some(scripts)) {
+    @back_link(backUrl)
+
+    @summaryErrorHelper(businessAccountingMethodForm)
+
+    <h1 class="heading-large">@question</h1>
+
+    <div class="form-group">
+        @accordionHelper(messages("business.accounting_method.accordion"), accordionInfo)
+    </div>
+    @form(action = postAction) {
+
+        @radioHelper(
+            field = businessAccountingMethodForm(businessAccountingMethod),
+            legend = question,
+            options = Seq(
+                RadioOption(AccountingMethodMapping.option_cash, messages("business.accounting_method.cash")),
+                RadioOption(AccountingMethodMapping.option_accruals, messages("business.accounting_method.accruals"))
+            ),
+            parentForm = businessAccountingMethodForm
+        )
+
+            @continueButton()
+    }
+
+}

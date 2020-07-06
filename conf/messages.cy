@@ -49,4 +49,14 @@ error.business_trade_name.invalid                               = Mae’n rhaid 
 
 #Business accounting method errors
 error.business_accounting_method.invalid                                 = Dewiswch sut rydych chi’n cofnodi’ch incwm a’ch treuliau ar gyfer eich busnes hunangyflogedig
-error.business_accounting-method.empty                                   = Dewiswch sut rydych chi’n cofnodi’ch incwm a’ch treuliau ar gyfer eich busnes hunangyflogedig
+error.business_accounting_method.empty                                   = Dewiswch sut rydych chi’n cofnodi’ch incwm a’ch treuliau ar gyfer eich busnes hunangyflogedig
+
+# Business Accounting Method page
+business.accounting_method.title                                = Sut rydych yn cofnodi’ch incwm a’ch treuliau ar gyfer eich busnes eiddo yn y DU?
+business.accounting_method.heading                              = Sut rydych yn cofnodi’ch incwm a’ch treuliau ar gyfer eich busnes eiddo yn y DU?
+business.accounting_method.accordion                            = Rhowch enghraifft i mi
+business.accounting_method.accordion.line_1                     = Gwnaethoch greu anfoneb i rywun ym mis Mawrth 2017, ond ni chawsoch yr arian tan fis Mai 2017. Os ydych yn rhoi gwybod i CThEM eich bod wedi cael yr incwm hwn ym:
+business.accounting_method.accordion.bullet_1                   = mis Mai 2017, rydych yn defnyddio ‘cyfrifyddu arian parod’
+business.accounting_method.accordion.bullet_2                   = mis Mawrth 2017, rydych yn defnyddio ‘cyfrifyddu safonol’
+business.accounting_method.cash                                 = <span class="heading-small">Cyfrifyddu arian parod</span><br>Rydych yn cofnodi naill ai ar y dyddiad yr ydych yn cael taliad gan eich tenantiaid i mewn i’ch cyfrif banc, neu ar y dyddiad yr ydych yn talu bil, er enghraifft ar gyfer atgyweirio a chynnal a chadw. Mae’r rhan fwyaf o fusnesau bach yn defnyddio’r dull hwn.
+business.accounting_method.accruals                             = <span class="heading-small">Cyfrifyddu safonol</span><br>Rydych yn cofnodi ar y dyddiad yr ydych yn anfon anfoneb at eich tenantiaid, neu’n gofyn am daliad ganddynt, hyd yn oed os nad ydych yn cael nac yn talu unrhyw arian. Rydych yn cofnodi ar y dyddiad yr ydych yn cael anfoneb ar gyfer atgyweirio neu gynnal a chadw. Mae hwn hefyd yn cael ei alw yn ‘cyfrifyddu croniadau’ neu ‘cyfrifyddu traddodiadol’.

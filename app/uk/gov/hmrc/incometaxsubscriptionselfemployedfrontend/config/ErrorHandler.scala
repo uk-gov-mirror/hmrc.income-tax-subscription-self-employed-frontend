@@ -24,7 +24,7 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.template
 import uk.gov.hmrc.play.bootstrap.http.FrontendErrorHandler
 
 @Singleton
-class ErrorHandler @Inject()(val messagesApi: MessagesApi, implicit val appConfig: AppConfig) extends FrontendErrorHandler {
+class ErrorHandler @Inject()(implicit val messagesApi: MessagesApi, implicit val appConfig: AppConfig) extends FrontendErrorHandler {
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: Request[_]): Html =
-    error_template(pageTitle, heading, message)
+    error_template(pageTitle, heading, message, None)
 }

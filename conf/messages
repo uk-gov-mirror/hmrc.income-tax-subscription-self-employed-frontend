@@ -47,6 +47,16 @@ error.business_trade_name.maxLength                             = Business trade
 error.business_trade_name.duplicate                             = You cannot enter the same trade and same business name
 error.business_trade_name.invalid                               = Business trade must only include letters a to z, hyphens, spaces and apostrophes
 
-#Business accounting method errors
-error.business_accounting_method.invalid                                 = Select how you record your income and expenses for your self-employed business
-error.business_accounting-method.empty                                   = Select how you record your income and expenses for your self-employed business
+# Business accounting method errors
+error.business_accounting_method.invalid                        = Select how you record your income and expenses for your self-employed business
+error.business_accounting_method.empty                          = Select how you record your income and expenses for your self-employed business
+
+# Business Accounting Method page
+business.accounting_method.title                                = How do you record your income and expenses for your self-employed business?
+business.accounting_method.heading                              = How do you record your income and expenses for your self-employed business?
+business.accounting_method.accordion                            = Show me an example
+business.accounting_method.accordion.line_1                     = You created an invoice for someone in March 2017, but did not receive the money until May 2017. If you tell HMRC you received this income in:
+business.accounting_method.accordion.bullet_1                   = May 2017, you use ‘cash accounting’
+business.accounting_method.accordion.bullet_2                   = March 2017, you use ‘standard accounting’
+business.accounting_method.cash                                 = <span class="heading-small">Cash accounting</span><br>You record on the date you receive money or pay a bill. Most sole traders and small businesses use this method.
+business.accounting_method.accruals                             = <span class="heading-small">Standard accounting</span><br>You record on the date you send or receive an invoice, even if you do not receive or pay any money. This is also called ‘accruals’ or ‘traditional accounting’.
