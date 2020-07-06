@@ -48,8 +48,8 @@ error.business_trade_name.duplicate                             = You cannot ent
 error.business_trade_name.invalid                               = Business trade must only include letters a to z, hyphens, spaces and apostrophes
 
 #Business accounting method errors
-error.business_accounting_method.invalid                        = Select how you record your income and expenses for your self-employed business
-error.business_accounting-method.empty                          = Select how you record your income and expenses for your self-employed business
+error.business_accounting_method.invalid                        = Select if you use cash accounting or standard accounting
+error.business_accounting_method.empty                          = Select if you use cash accounting or standard accounting
 
 # Business Accounting Method page
 business.accounting_method.title                                = How do you record your income and expenses for your self-employed business?

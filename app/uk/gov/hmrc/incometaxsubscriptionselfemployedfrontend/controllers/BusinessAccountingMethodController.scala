@@ -24,6 +24,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.AppConfig
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.IncomeTaxSubscriptionConnector
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.httpparser.GetSelfEmploymentsHttpParser.{GetSelfEmploymentsFailure, InvalidJson, UnexpectedStatusFailure}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.BusinessAccountingMethodForm._
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.FormUtil._
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.AccountingMethodModel
@@ -52,9 +53,12 @@ class BusinessAccountingMethodController @Inject()(mcc: MessagesControllerCompon
   def show(): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
       incomeTaxSubscriptionConnector.getSelfEmployments[AccountingMethodModel](BusinessAccountingMethodController.businessAccountingMethodKey).map {
-        case Right(businessAccountingMethod) =>
-          Ok(view(businessAccountingMethodForm.fill(businessAccountingMethod)))
-        case error => throw new InternalServerException(error.toString)
+        case Right(accountingMethod) =>
+          Ok(view(businessAccountingMethodForm.fill(accountingMethod)))
+        case Left(UnexpectedStatusFailure(_@status)) =>
+          throw new InternalServerException(s"[BusinessAccountingMethodController][show] - Unexpected status: $status")
+        case Left(InvalidJson) =>
+          throw new InternalServerException("[BusinessAccountingMethodController][show] - Invalid Json")
       }
     }
   }
@@ -67,15 +71,14 @@ class BusinessAccountingMethodController @Inject()(mcc: MessagesControllerCompon
           Future.successful(BadRequest(view(formWithErrors))),
         businessAccountingMethod =>
           incomeTaxSubscriptionConnector.saveSelfEmployments(BusinessAccountingMethodController.businessAccountingMethodKey, businessAccountingMethod) map (_ =>
-            Redirect(uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.routes.BusinessAccountingMethodController.show())
+            Redirect(routes.BusinessAccountingMethodController.show())
             )
       )
     }
   }
 
   def backUrl(): String =
-    uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.routes.BusinessNameController.show().url
-
+    routes.BusinessTradeNameController.show().url
 }
 
 object BusinessAccountingMethodController {

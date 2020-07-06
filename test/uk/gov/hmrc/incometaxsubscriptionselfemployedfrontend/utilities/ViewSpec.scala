@@ -20,7 +20,6 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.scalatest.{Assertion, MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.data.Form
 import play.api.i18n.{Messages, MessagesApi}
 import play.api.mvc.Call
 import play.api.test.FakeRequest
@@ -65,6 +64,14 @@ trait ViewSpec extends WordSpec with MustMatchers with GuiceOneAppPerSuite {
 
     val getBackLink: Elements = element.select(s"a[class=back-link]")
 
+    def getParagraphNth(index: Int = 0): String = {
+      element.select("p").get(index).text()
+    }
+
+    def getBulletPointNth(index: Int = 0): String = element.select("ul[class=bullets] li").get(index).text()
+
+    def getRadioButtonByIndex(index: Int = 0): Element = element.select("div .multiple-choice").get(index)
+
     def getSpan(id: String): Elements = element.select(s"""span[id=$id]""")
 
     def getLink(id: String): Elements = element.select(s"""a[id=$id]""")
@@ -72,8 +79,6 @@ trait ViewSpec extends WordSpec with MustMatchers with GuiceOneAppPerSuite {
     def getTextFieldInput(id: String): Elements = element.select(s"""input[id=$id]""")
 
     def getFieldErrorMessage(id: String): Elements = element.select(s"""a[id=$id-error-summary]""")
-
-    def getBulletPointList: Elements = element.select("ul[class=list list-bullet]")
 
     def mustHaveTextField(name: String, label: String): Assertion = {
       val eles = element.select(s"input[name=$name]")
@@ -118,7 +123,6 @@ trait ViewSpec extends WordSpec with MustMatchers with GuiceOneAppPerSuite {
       getErrorSummary.select("ul > li").text mustBe errors.mkString(" ")
     }
 
-    }
+  }
 
 }
-

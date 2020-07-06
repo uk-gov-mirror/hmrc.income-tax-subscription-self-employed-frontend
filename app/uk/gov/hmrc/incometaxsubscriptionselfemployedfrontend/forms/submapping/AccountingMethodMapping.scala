@@ -26,7 +26,7 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.{AccountingM
 object AccountingMethodMapping {
 
   val option_cash = "Cash"
-  val option_accruals = "Accruals"
+  val option_accruals = "Standard"
 
   def apply(errInvalid: Invalid, errEmpty: Option[Invalid]): Mapping[AccountingMethod] = of(new Formatter[AccountingMethod] {
     override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], AccountingMethod] = {

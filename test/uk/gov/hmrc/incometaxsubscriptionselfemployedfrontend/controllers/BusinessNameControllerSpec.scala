@@ -88,7 +88,7 @@ class BusinessNameControllerSpec extends ControllerBaseSpec
         val result = TestBusinessNameController$.submit()(FakeRequest().withFormUrlEncodedBody(modelToFormData(mockBusinessNameModel): _*)
         )
         status(result) mustBe SEE_OTHER
-        redirectLocation(result) mustBe Some(uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.routes.BusinessTradeNameController.show().url)
+        redirectLocation(result) mustBe Some(routes.BusinessTradeNameController.show().url)
 
       }
 

@@ -20,7 +20,7 @@ import play.api.mvc.{Action, AnyContent}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.InternalServerException
-import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.httpparser.GetSelfEmploymentsHttpParser.UnexpectedStatusFailure
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.httpparser.GetSelfEmploymentsHttpParser.{InvalidJson, UnexpectedStatusFailure}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.httpparser.PostSelfEmploymentsHttpParser.PostSelfEmploymentsSuccessResponse
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.mocks.MockIncomeTaxSubscriptionConnector
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.BusinessAccountingMethodForm
@@ -66,11 +66,19 @@ class BusinessAccountingMethodControllerSpec extends ControllerBaseSpec
         contentType(result) mustBe Some("text/html")
       }
     }
-    "Throw an internal exception error" when {
-      "the connector returns an error" in {
+    "Throw an internal exception" when {
+      "there is an unexpected status failure" in {
         mockAuthSuccess()
         mockGetSelfEmployments(BusinessAccountingMethodController.businessAccountingMethodKey)(Left(UnexpectedStatusFailure(INTERNAL_SERVER_ERROR)))
-        intercept[InternalServerException](await(TestBusinessAccountingMethodController$.show()(FakeRequest())))
+        val response = intercept[InternalServerException](await(TestBusinessAccountingMethodController$.show()(FakeRequest())))
+        response.message mustBe("[BusinessAccountingMethodController][show] - Unexpected status: 500")
+      }
+
+      "there is an invalid Json" in {
+        mockAuthSuccess()
+        mockGetSelfEmployments(BusinessAccountingMethodController.businessAccountingMethodKey)(Left(InvalidJson))
+        val response = intercept[InternalServerException](await(TestBusinessAccountingMethodController$.show()(FakeRequest())))
+        response.message mustBe("[BusinessAccountingMethodController][show] - Invalid Json")
       }
     }
 
@@ -100,6 +108,13 @@ class BusinessAccountingMethodControllerSpec extends ControllerBaseSpec
         status(result) mustBe BAD_REQUEST
         contentType(result) mustBe Some("text/html")
       }
+    }
+  }
+
+  "The back url" should {
+    "return a url for the business trade name page" in {
+      mockAuthSuccess()
+      TestBusinessAccountingMethodController$.backUrl() mustBe routes.BusinessTradeNameController.show().url
     }
   }
   authorisationTests()
