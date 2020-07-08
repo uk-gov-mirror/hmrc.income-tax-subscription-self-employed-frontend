@@ -48,8 +48,8 @@ error.business_trade_name.duplicate                             = Ni allwch nodi
 error.business_trade_name.invalid                               = Mae’n rhaid i fasnach y busnes gynnwys y llythrennau a i z, cysylltnodau, bylchau a chollnodau yn unig
 
 #Business accounting method errors
-error.business_accounting_method.invalid                                 = Dewiswch sut rydych chi’n cofnodi’ch incwm a’ch treuliau ar gyfer eich busnes hunangyflogedig
-error.business_accounting_method.empty                                   = Dewiswch sut rydych chi’n cofnodi’ch incwm a’ch treuliau ar gyfer eich busnes hunangyflogedig
+error.business_accounting_method.invalid                        = Dewiswch os ydych yn defnyddio cyfrifyddu arian parod neu gyfrifyddu safonol
+error.business_accounting_method.empty                          = Dewiswch os ydych yn defnyddio cyfrifyddu arian parod neu gyfrifyddu safonol
 
 # Business Accounting Method page
 business.accounting_method.title                                = Sut rydych yn cofnodi’ch incwm a’ch treuliau ar gyfer eich busnes eiddo yn y DU?
