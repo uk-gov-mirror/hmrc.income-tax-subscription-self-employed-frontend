@@ -30,7 +30,7 @@
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.AddAnotherBusinessForm
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.submapping.YesNoMapping
 
-@(addAnotherBusinessForm: Form[AddAnotherBusinessModel], answers: Seq[SelfEmploymentData], postAction: Call, implicitDateFormatter: ImplicitDateFormatter)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(addAnotherBusinessForm: Form[AddAnotherBusinessModel], answers: Seq[SelfEmploymentData], postAction: Call,isEditMode: Boolean, implicitDateFormatter: ImplicitDateFormatter)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @summaryRow(question: String, answer: String, changeUrl: Option[String]) = {
     <div class="govuk-summary-list__row">

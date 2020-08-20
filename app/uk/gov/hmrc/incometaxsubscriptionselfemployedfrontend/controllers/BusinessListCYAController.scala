@@ -42,20 +42,22 @@ class BusinessListCYAController @Inject()(authService: AuthService,
                                          (implicit val ec: ExecutionContext, val appConfig: AppConfig, dateFormatter: ImplicitDateFormatterImpl)
   extends FrontendController(mcc) with I18nSupport {
 
-  def view(addAnotherBusinessForm: Form[AddAnotherBusinessModel], businesses: Seq[SelfEmploymentData])(implicit request: Request[AnyContent]): Html = {
+  def view(addAnotherBusinessForm: Form[AddAnotherBusinessModel], businesses: Seq[SelfEmploymentData], isEditMode: Boolean)
+          (implicit request: Request[AnyContent]): Html = {
     check_your_answers(
       addAnotherBusinessForm = addAnotherBusinessForm,
       answers = businesses,
-      postAction = uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.routes.BusinessListCYAController.submit(),
+      postAction = uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.routes.BusinessListCYAController.submit(isEditMode),
+      isEditMode,
       implicitDateFormatter = dateFormatter
     )
   }
 
-  def show: Action[AnyContent] = Action.async { implicit request =>
+  def show(isEditMode: Boolean): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
       incomeTaxSubscriptionConnector.getSelfEmployments[Seq[SelfEmploymentData]](businessesKey).map {
         case Right(Some(businesses)) if businesses.exists(_.isComplete) =>
-          Ok(view(addAnotherBusinessForm(businesses.size, appConfig.limitOnNumberOfBusinesses), businesses.filter(_.isComplete)))
+          Ok(view(addAnotherBusinessForm(businesses.size, appConfig.limitOnNumberOfBusinesses), businesses.filter(_.isComplete), isEditMode))
         case Right(_) => Redirect(routes.InitialiseController.initialise())
         case Left(UnexpectedStatusFailure(status)) =>
           throw new InternalServerException(s"[BusinessListCYAController][show] - getSelfEmployments connection failure, status: $status")
@@ -65,15 +67,20 @@ class BusinessListCYAController @Inject()(authService: AuthService,
     }
   }
 
-  def submit(): Action[AnyContent] = Action.async { implicit request =>
+  def submit(isEditMode: Boolean): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
       incomeTaxSubscriptionConnector.getSelfEmployments[Seq[SelfEmploymentData]](businessesKey).map {
         case Right(Some(businesses)) if businesses.exists(_.isComplete) =>
           addAnotherBusinessForm(businesses.size, appConfig.limitOnNumberOfBusinesses).bindFromRequest.fold(
-            formWithErrors => BadRequest(view(formWithErrors, businesses)),
+            formWithErrors => BadRequest(view(formWithErrors, businesses, isEditMode)),
             businessNameData => businessNameData.addAnotherBusiness match {
               case Yes => Redirect(routes.InitialiseController.initialise())
-              case No => Redirect(routes.BusinessAccountingMethodController.show())
+              case No =>
+                if (isEditMode) {
+                  Redirect(appConfig.incomeTaxSubscriptionFrontendBaseUrl + "/check-your-answers")
+              } else {
+                Redirect(routes.BusinessAccountingMethodController.show())
+              }
             }
           )
         case Right(_) => Redirect(routes.InitialiseController.initialise())
