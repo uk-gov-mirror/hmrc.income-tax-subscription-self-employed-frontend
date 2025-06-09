@@ -20,7 +20,11 @@ import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{OFormat, __}
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 
-case class SoleTraderBusinesses(businesses: Seq[SoleTraderBusiness], accountingMethod: Option[AccountingMethod] = None)
+case class SoleTraderBusinesses(businesses: Seq[SoleTraderBusiness], accountingMethod: Option[AccountingMethod] = None) {
+
+  val hasDuplicates: Boolean =
+    businesses.exists(_.isDuplicate(businesses))
+}
 
 object SoleTraderBusinesses {
 

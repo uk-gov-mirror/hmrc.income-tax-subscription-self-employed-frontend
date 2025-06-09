@@ -28,7 +28,27 @@ case class SoleTraderBusiness(id: String,
                               startDate: Option[DateModel] = None,
                               name: Option[String] = None,
                               trade: Option[String] = None,
-                              address: Option[Address] = None)
+                              address: Option[Address] = None) {
+
+  private def isSameAs(other: SoleTraderBusiness): Boolean = {
+    if (id != other.id) {
+      val thisName = name.getOrElse("")
+      val otherName = other.name.getOrElse("")
+      if (thisName == otherName) {
+        val thisTrade = trade.getOrElse("")
+        val otherTrade = other.trade.getOrElse("")
+        thisTrade == otherTrade
+      } else {
+        false
+      }
+    } else {
+      false
+    }
+  }
+
+  def isDuplicate(others: Seq[SoleTraderBusiness]): Boolean =
+    others.exists(isSameAs)
+}
 
 object SoleTraderBusiness {
 

@@ -26,6 +26,8 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.mocks.Mo
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models._
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.agent.StreamlineBusiness
 
+import java.util.UUID
+
 class MultipleSelfEmploymentsServiceSpec extends PlaySpec with MockIncomeTaxSubscriptionConnector {
 
   val applicationCrypto: ApplicationCrypto = app.injector.instanceOf[ApplicationCrypto]
@@ -151,6 +153,17 @@ class MultipleSelfEmploymentsServiceSpec extends PlaySpec with MockIncomeTaxSubs
 
         await(service.saveSoleTraderBusinesses(testReference, soleTraderBusinesses)) mustBe
           Left(MultipleSelfEmploymentsService.SaveSelfEmploymentDataFailure)
+      }
+    }
+    "return a duplicate error" when {
+      "there are duplicates in the data to save" in new Setup {
+        val soleTraderBusinessesWithDuplicates = soleTraderBusinesses.copy(
+          businesses = soleTraderBusinesses.businesses ++ soleTraderBusinesses.businesses.map(_.copy(
+            id = UUID.randomUUID().toString
+          ))
+        )
+        await(service.saveSoleTraderBusinesses(testReference, soleTraderBusinessesWithDuplicates)) mustBe
+          Left(MultipleSelfEmploymentsService.SaveSelfEmploymentDataDuplicates)
       }
     }
   }
@@ -904,8 +917,8 @@ class MultipleSelfEmploymentsServiceSpec extends PlaySpec with MockIncomeTaxSubs
       "there are already existing sole trader businesses with an updated accounting method" in new Setup {
         val saveData: AccountingMethod = Accruals
 
-        val business1: SoleTraderBusiness = soleTraderBusiness.copy(id = id, confirmed = true)
-        val business2: SoleTraderBusiness = soleTraderBusiness.copy(id = s"$id-2", confirmed = true)
+        val business1: SoleTraderBusiness = soleTraderBusiness.copy(id = id, confirmed = true, name = Some("A"))
+        val business2: SoleTraderBusiness = soleTraderBusiness.copy(id = s"$id-2", confirmed = true, name = Some("B"))
         val oldBusinesses: SoleTraderBusinesses = soleTraderBusinesses.copy(businesses = Seq(business1, business2))
 
         val updatedBusiness1: SoleTraderBusiness = business1.copy(confirmed = false)

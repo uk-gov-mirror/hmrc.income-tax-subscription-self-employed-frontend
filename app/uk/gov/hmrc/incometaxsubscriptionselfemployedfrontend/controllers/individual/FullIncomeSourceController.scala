@@ -26,7 +26,8 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitc
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.utils.ReferenceRetrieval
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.individual.StreamlineIncomeSourceForm
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.agent.StreamlineBusiness
-import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.{No, Yes}
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.{NameAndTradeModel, No, Yes}
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.MultipleSelfEmploymentsService.SaveSelfEmploymentDataDuplicates
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.{AuthService, MultipleSelfEmploymentsService, SessionDataService}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities.ImplicitDateFormatter
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.individual.FullIncomeSource
@@ -87,16 +88,30 @@ class FullIncomeSourceController @Inject()(fullIncomeSource: FullIncomeSource,
                   case No => false
                 },
                 accountingMethod = None
-              ) map {
-                case Right(_) =>
+              ) flatMap {
+                case Right(_) => Future.successful(
                   if (startDateBeforeLimit == No) {
                     Redirect(routes.BusinessStartDateController.show(id, isEditMode, isGlobalEdit))
                   } else if (isEditMode || isGlobalEdit) {
                     Redirect(routes.SelfEmployedCYAController.show(id, isEditMode, isGlobalEdit))
                   } else {
                     Redirect(routes.AddressLookupRoutingController.checkAddressLookupJourney(id, isEditMode))
+                  })
+                case Left(SaveSelfEmploymentDataDuplicates) =>
+                  multipleSelfEmploymentsService.saveNameAndTrade(NameAndTradeModel(
+                    reference = reference,
+                    id = id,
+                    name = name,
+                    trade = trade,
+                    isAgent = false
+                  )).map {
+                    case Right(_) =>
+                      Redirect("")
+                    case Left(_) =>
+                      throw new InternalServerException("[FullIncomeSourceController][submit] - Could not save sole trader full income source")
                   }
-                case Left(_) => throw new InternalServerException("[FullIncomeSourceController][submit] - Could not save sole trader full income source")
+                case Left(_) =>
+                  throw new InternalServerException("[FullIncomeSourceController][submit] - Could not save sole trader full income source")
               }
           }
         )

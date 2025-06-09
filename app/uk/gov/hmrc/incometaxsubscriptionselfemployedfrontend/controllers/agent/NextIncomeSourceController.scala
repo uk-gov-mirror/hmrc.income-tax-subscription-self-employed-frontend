@@ -26,7 +26,8 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitc
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.utils.ReferenceRetrieval
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.agent.StreamlineIncomeSourceForm
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.agent.StreamlineIncomeSourceForm.nextIncomeSourceForm
-import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.{ClientDetails, No, Yes}
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.{ClientDetails, NameAndTradeModel, No, Yes}
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.MultipleSelfEmploymentsService.SaveSelfEmploymentDataDuplicates
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.{AuthService, ClientDetailsRetrieval, MultipleSelfEmploymentsService, SessionDataService}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities.ImplicitDateFormatter
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.agent.NextIncomeSource
@@ -123,17 +124,30 @@ class NextIncomeSourceController @Inject()(nextIncomeSource: NextIncomeSource,
       name = name,
       startDateBeforeLimit = startDateBeforeLimit,
       accountingMethod = None
-    ) map {
-      case Right(_) =>
+    ) flatMap  {
+      case Right(_) => Future.successful(
         if (!startDateBeforeLimit) {
           Redirect(routes.BusinessStartDateController.show(id, isEditMode, isGlobalEdit))
         } else if (isEditMode || isGlobalEdit) {
           Redirect(routes.SelfEmployedCYAController.show(id, isEditMode, isGlobalEdit))
         } else {
           Redirect(routes.AddressLookupRoutingController.checkAddressLookupJourney(id, isEditMode))
+        })
+      case Left(SaveSelfEmploymentDataDuplicates) =>
+        multipleSelfEmploymentsService.saveNameAndTrade(NameAndTradeModel(
+          reference = reference,
+          id = id,
+          name = name,
+          trade = trade,
+          isAgent = true
+        )).map {
+          case Right(_) =>
+            Redirect("")
+          case Left(_) =>
+            throw new InternalServerException("[FullIncomeSourceController][submit] - Could not save sole trader full income source")
         }
       case Left(_) =>
-        throw new InternalServerException("[NextIncomeSourceController][submit] - Could not save next income source")
+        throw new InternalServerException("[FullIncomeSourceController][submit] - Could not save sole trader full income source")
     }
   }
 

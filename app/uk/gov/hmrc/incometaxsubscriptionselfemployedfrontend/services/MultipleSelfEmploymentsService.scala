@@ -24,7 +24,7 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.httppars
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.httpparser.PostSelfEmploymentsHttpParser.PostSubscriptionDetailsSuccess
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models._
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.agent.StreamlineBusiness
-import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.MultipleSelfEmploymentsService.SaveSelfEmploymentDataFailure
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.MultipleSelfEmploymentsService.{SaveSelfEmploymentDataDuplicates, SaveSelfEmploymentDataError, SaveSelfEmploymentDataFailure}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -45,24 +45,27 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
   }
 
   def saveSoleTraderBusinesses(reference: String, soleTraderBusinesses: SoleTraderBusinesses)
-                              (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataFailure.type, PostSubscriptionDetailsSuccess]] = {
-    incomeTaxSubscriptionConnector.saveSubscriptionDetails[SoleTraderBusinesses](
-      reference = reference,
-      id = SelfEmploymentDataKeys.soleTraderBusinessesKey,
-      data = soleTraderBusinesses
-    )(implicitly, SoleTraderBusinesses.encryptedFormat) flatMap {
-      case Right(value) =>
-        incomeTaxSubscriptionConnector.deleteSubscriptionDetails(
-          reference = reference,
-          key = SelfEmploymentDataKeys.incomeSourcesComplete
-        ) map {
-          case Right(_) => Right(value)
-          case Left(_) => Left(SaveSelfEmploymentDataFailure)
-        }
-      case Left(_) =>
-        Future.successful(Left(SaveSelfEmploymentDataFailure))
+                              (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataError, PostSubscriptionDetailsSuccess]] =
+    if (soleTraderBusinesses.hasDuplicates) {
+      Future.successful(Left(SaveSelfEmploymentDataDuplicates))
+    } else {
+      incomeTaxSubscriptionConnector.saveSubscriptionDetails[SoleTraderBusinesses](
+        reference = reference,
+        id = SelfEmploymentDataKeys.soleTraderBusinessesKey,
+        data = soleTraderBusinesses
+      )(implicitly, SoleTraderBusinesses.encryptedFormat) flatMap {
+        case Right(value) =>
+          incomeTaxSubscriptionConnector.deleteSubscriptionDetails(
+            reference = reference,
+            key = SelfEmploymentDataKeys.incomeSourcesComplete
+          ) map {
+            case Right(_) => Right(value)
+            case Left(_) => Left(SaveSelfEmploymentDataFailure)
+          }
+        case Left(_) =>
+          Future.successful(Left(SaveSelfEmploymentDataFailure))
+      }
     }
-  }
 
   private def findData[T](reference: String, id: String, modelToData: SoleTraderBusiness => Option[T])
                          (implicit hc: HeaderCarrier): Future[Either[GetSelfEmploymentsFailure, Option[T]]] = {
@@ -79,18 +82,36 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
   def fetchStreamlineBusiness(reference: String, id: String)
                              (implicit hc: HeaderCarrier): Future[Either[GetSelfEmploymentsFailure, StreamlineBusiness]] = {
     fetchSoleTraderBusinesses(reference) map { result =>
-      result map {
+      result flatMap {
         case Some(SoleTraderBusinesses(businesses, maybeAccountingMethod)) =>
-          val maybeFirstBusiness: Option[SoleTraderBusiness] = businesses.find(_.id == id)
-          StreamlineBusiness(
-            trade = maybeFirstBusiness.flatMap(_.trade),
-            name = maybeFirstBusiness.flatMap(_.name),
-            startDate = maybeFirstBusiness.flatMap(_.startDate),
-            startDateBeforeLimit = maybeFirstBusiness.flatMap(_.startDateBeforeLimit),
-            accountingMethod = maybeAccountingMethod,
-            isFirstBusiness = businesses.headOption.exists(_.id == id)
-          )
-        case None => StreamlineBusiness(None, None, None, None, None, isFirstBusiness = true)
+          businesses.find(_.id == id) match {
+            case None => getNameAndTrade(reference, id).map {
+              case Right(nameAndTrade) =>
+                StreamlineBusiness(
+                  trade = nameAndTrade.map(_.trade),
+                  name = nameAndTrade.map(_.name),
+                  startDate = None,
+                  startDateBeforeLimit = None,
+                  accountingMethod = maybeAccountingMethod,
+                  isFirstBusiness = false
+                )
+              case Left(_) => Future.successful(
+                StreamlineBusiness(None, None, None, None, None, isFirstBusiness = true)
+              )
+            }
+            case Some(maybeFirstBusiness) =>
+              Right(StreamlineBusiness(
+                trade = maybeFirstBusiness.trade,
+                name = maybeFirstBusiness.name,
+                startDate = maybeFirstBusiness.startDate,
+                startDateBeforeLimit = maybeFirstBusiness.startDateBeforeLimit,
+                accountingMethod = maybeAccountingMethod,
+                isFirstBusiness = false
+              ))
+          })
+        case None => Right(
+          StreamlineBusiness(None, None, None, None, None, isFirstBusiness = true)
+        )
       }
     }
   }
@@ -110,7 +131,7 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
                        id: String,
                        businessUpdate: SoleTraderBusiness => SoleTraderBusiness,
                        accountingMethod: Option[AccountingMethod] = None)
-                      (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataFailure.type, PostSubscriptionDetailsSuccess]] = {
+                      (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataError, PostSubscriptionDetailsSuccess]] = {
 
     def updateSoleTraderBusinesses(soleTraderBusinesses: SoleTraderBusinesses): SoleTraderBusinesses = {
       val updatedBusinessesList: Seq[SoleTraderBusiness] = if (soleTraderBusinesses.businesses.exists(_.id == id)) {
@@ -146,27 +167,27 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
   }
 
   def saveStartDate(reference: String, businessId: String, startDate: DateModel)
-                   (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataFailure.type, PostSubscriptionDetailsSuccess]] = {
+                   (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataError, PostSubscriptionDetailsSuccess]] = {
     saveData(reference, businessId, _.copy(startDate = Some(startDate), confirmed = false))
   }
 
   def saveName(reference: String, businessId: String, name: String)
-              (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataFailure.type, PostSubscriptionDetailsSuccess]] = {
+              (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataError, PostSubscriptionDetailsSuccess]] = {
     saveData(reference, businessId, _.copy(name = Some(name), confirmed = false))
   }
 
   def saveTrade(reference: String, businessId: String, trade: String)
-               (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataFailure.type, PostSubscriptionDetailsSuccess]] = {
+               (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataError, PostSubscriptionDetailsSuccess]] = {
     saveData(reference, businessId, _.copy(trade = Some(trade), confirmed = false))
   }
 
   def saveAddress(reference: String, businessId: String, address: Address)
-                 (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataFailure.type, PostSubscriptionDetailsSuccess]] = {
+                 (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataError, PostSubscriptionDetailsSuccess]] = {
     saveData(reference, businessId, _.copy(address = Some(address), confirmed = false))
   }
 
   def confirmBusiness(reference: String, businessId: String)
-                     (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataFailure.type, PostSubscriptionDetailsSuccess]] = {
+                     (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataError, PostSubscriptionDetailsSuccess]] = {
     saveData(reference, businessId, _.copy(confirmed = true))
   }
 
@@ -176,7 +197,7 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
                        name: String,
                        startDateBeforeLimit: Boolean,
                        accountingMethod: Option[AccountingMethod])
-                      (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataFailure.type, PostSubscriptionDetailsSuccess]] = {
+                      (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataError, PostSubscriptionDetailsSuccess]] = {
     saveData(
       reference = reference,
       id = businessId,
@@ -193,7 +214,7 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
   }
 
   def saveAccountingMethod(reference: String, businessId: String, accountingMethod: AccountingMethod)
-                          (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataFailure.type, PostSubscriptionDetailsSuccess]] = {
+                          (implicit hc: HeaderCarrier): Future[Either[SaveSelfEmploymentDataError, PostSubscriptionDetailsSuccess]] = {
 
     fetchSoleTraderBusinesses(reference) map { result =>
       result map {
@@ -244,10 +265,26 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
     }
   }
 
+  def saveNameAndTrade(
+    model: NameAndTradeModel
+  )(implicit hc: HeaderCarrier): Future[Either[GetSelfEmploymentsFailure, Boolean]] = {
+    Future.successful(Right(true))
+  }
+
+  def getNameAndTrade(
+    reference: String,
+    id: String
+  )(implicit hc: HeaderCarrier): Future[Either[GetSelfEmploymentsFailure, Option[NameAndTradeModel]]] = {
+    Future.successful(Right(Some(NameAndTradeModel(reference = reference, id = id, name = "", trade = "", isAgent = false))))
+  }
 }
 
 object MultipleSelfEmploymentsService {
 
-  case object SaveSelfEmploymentDataFailure
+  abstract class SaveSelfEmploymentDataError
+
+  case object SaveSelfEmploymentDataFailure extends SaveSelfEmploymentDataError
+
+  case object SaveSelfEmploymentDataDuplicates extends SaveSelfEmploymentDataError
 
 }
