@@ -81,11 +81,11 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
 
   def fetchStreamlineBusiness(reference: String, id: String)
                              (implicit hc: HeaderCarrier): Future[Either[GetSelfEmploymentsFailure, StreamlineBusiness]] = {
-    fetchSoleTraderBusinesses(reference) map { result =>
-      result flatMap {
+    fetchSoleTraderBusinesses(reference) flatMap { result =>
+      result map {
         case Some(SoleTraderBusinesses(businesses, maybeAccountingMethod)) =>
           businesses.find(_.id == id) match {
-            case None => getNameAndTrade(reference, id).map {
+            case None => getNameAndTrade(reference, id) map {
               case Right(nameAndTrade) =>
                 StreamlineBusiness(
                   trade = nameAndTrade.map(_.trade),
@@ -95,12 +95,10 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
                   accountingMethod = maybeAccountingMethod,
                   isFirstBusiness = false
                 )
-              case Left(_) => Future.successful(
-                StreamlineBusiness(None, None, None, None, None, isFirstBusiness = true)
-              )
-            }
+              case Left(_) => StreamlineBusiness(None, None, None, None, None, isFirstBusiness = true)
+              }
             case Some(maybeFirstBusiness) =>
-              Right(StreamlineBusiness(
+              Future.successful(StreamlineBusiness(
                 trade = maybeFirstBusiness.trade,
                 name = maybeFirstBusiness.name,
                 startDate = maybeFirstBusiness.startDate,
@@ -108,10 +106,11 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
                 accountingMethod = maybeAccountingMethod,
                 isFirstBusiness = false
               ))
-          })
-        case None => Right(
-          StreamlineBusiness(None, None, None, None, None, isFirstBusiness = true)
-        )
+          }
+        case None => Future.successful(StreamlineBusiness(None, None, None, None, None, isFirstBusiness = true))
+      } match {
+        case Left(e) => Future.successful(Left(e))
+        case Right(f) => f.map(Right(_))
       }
     }
   }
