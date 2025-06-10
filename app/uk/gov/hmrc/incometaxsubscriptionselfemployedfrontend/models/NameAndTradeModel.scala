@@ -16,6 +16,12 @@
 
 package uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models
 
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.{Format, OFormat, OWrites, Reads, __}
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
+import uk.gov.hmrc.crypto.json.JsonEncryption
+
 case class NameAndTradeModel(
   reference: String,
   id: String,
@@ -23,3 +29,44 @@ case class NameAndTradeModel(
   trade: String,
   isAgent: Boolean
 )
+
+object NameAndTradeModel {
+  def encryptedFormat(implicit crypto: Encrypter with Decrypter): OFormat[NameAndTradeModel] = {
+
+    implicit val sensitiveFormat: Format[SensitiveString] = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)
+
+    val reads: Reads[NameAndTradeModel] = (
+      (__ \ "reference").read[String] and
+        (__ \ "id").read[String] and
+        (__ \ "name").read[SensitiveString] and
+        (__ \ "trade").read[String] and
+        (__ \ "agent").read[Boolean]
+      )((reference, id, name, trade, isAgent) =>
+        NameAndTradeModel.apply(
+          reference = reference,
+          id = id,
+          name = name.decryptedValue,
+          trade = trade,
+          isAgent = isAgent
+        )
+    )
+
+    val writes: OWrites[NameAndTradeModel] = (
+      (__ \ "reference").write[String] and
+        (__ \ "id").write[String] and
+        (__ \ "name").write[SensitiveString] and
+        (__ \ "trade").write[String] and
+        (__ \ "agent").write[Boolean]
+      )(nameAndTradeModel =>
+        (
+          nameAndTradeModel.reference,
+          nameAndTradeModel.id,
+          SensitiveString.apply(nameAndTradeModel.name),
+          nameAndTradeModel.trade,
+          nameAndTradeModel.isAgent
+        )
+      )
+
+      OFormat(reads, writes)
+    }
+ }
