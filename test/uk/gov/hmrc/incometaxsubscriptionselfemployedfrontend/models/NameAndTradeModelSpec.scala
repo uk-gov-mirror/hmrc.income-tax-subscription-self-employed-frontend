@@ -17,11 +17,8 @@
 package uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models
 
 import org.scalatestplus.play.PlaySpec
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.{Application, Environment, Mode}
 import play.api.libs.json.{JsSuccess, Json, OFormat}
-import uk.gov.hmrc.crypto.{ApplicationCrypto, Decrypter, Encrypter, SymmetricCryptoFactory}
-import uk.gov.hmrc.http.HeaderCarrier.Config
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter, SymmetricCryptoFactory}
 
 import java.util.UUID
 
