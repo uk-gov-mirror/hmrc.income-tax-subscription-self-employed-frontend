@@ -23,7 +23,6 @@ import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.crypto.json.JsonEncryption
 
 case class NameAndTradeModel(
-  reference: String,
   id: String,
   name: String,
   trade: String,
@@ -36,14 +35,12 @@ object NameAndTradeModel {
     implicit val sensitiveFormat: Format[SensitiveString] = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)
 
     val reads: Reads[NameAndTradeModel] = (
-      (__ \ "reference").read[String] and
-        (__ \ "id").read[String] and
+      (__ \ "id").read[String] and
         (__ \ "name").read[SensitiveString] and
         (__ \ "trade").read[String] and
         (__ \ "agent").read[Boolean]
-      )((reference, id, name, trade, isAgent) =>
+      )((id, name, trade, isAgent) =>
         NameAndTradeModel.apply(
-          reference = reference,
           id = id,
           name = name.decryptedValue,
           trade = trade,
@@ -52,14 +49,12 @@ object NameAndTradeModel {
     )
 
     val writes: OWrites[NameAndTradeModel] = (
-      (__ \ "reference").write[String] and
-        (__ \ "id").write[String] and
+      (__ \ "id").write[String] and
         (__ \ "name").write[SensitiveString] and
         (__ \ "trade").write[String] and
         (__ \ "agent").write[Boolean]
       )(nameAndTradeModel =>
         (
-          nameAndTradeModel.reference,
           nameAndTradeModel.id,
           SensitiveString.apply(nameAndTradeModel.name),
           nameAndTradeModel.trade,

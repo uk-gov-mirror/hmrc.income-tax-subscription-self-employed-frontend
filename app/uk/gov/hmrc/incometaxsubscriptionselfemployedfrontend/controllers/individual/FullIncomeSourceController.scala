@@ -34,6 +34,7 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.individu
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.play.language.LanguageUtils
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -98,15 +99,15 @@ class FullIncomeSourceController @Inject()(fullIncomeSource: FullIncomeSource,
                     Redirect(routes.AddressLookupRoutingController.checkAddressLookupJourney(id, isEditMode))
                   })
                 case Left(SaveSelfEmploymentDataDuplicates) =>
+                  val uuid = UUID.randomUUID().toString
                   multipleSelfEmploymentsService.saveNameAndTrade(NameAndTradeModel(
-                    reference = reference,
-                    id = id,
+                    id = uuid,
                     name = name,
                     trade = trade,
                     isAgent = false
                   )).map {
                     case Right(_) =>
-                      Redirect("")
+                      Redirect("").withSession("sessionId" -> uuid)
                     case Left(_) =>
                       throw new InternalServerException("[FullIncomeSourceController][submit] - Could not save sole trader full income source")
                   }

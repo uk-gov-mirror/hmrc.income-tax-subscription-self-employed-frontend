@@ -271,10 +271,9 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
   }
 
   def getNameAndTrade(
-    reference: String,
     id: String
   )(implicit hc: HeaderCarrier): Future[Either[GetSelfEmploymentsFailure, Option[NameAndTradeModel]]] = {
-    Future.successful(Right(Some(NameAndTradeModel(reference = reference, id = id, name = "", trade = "", isAgent = false))))
+    Future.successful(Right(Some(NameAndTradeModel(id = id, name = "", trade = "", isAgent = false))))
   }
 }
 
