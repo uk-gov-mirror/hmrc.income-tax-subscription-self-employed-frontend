@@ -95,7 +95,8 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
                   accountingMethod = maybeAccountingMethod,
                   isFirstBusiness = false
                 )
-              case Left(_) => StreamlineBusiness(None, None, None, None, None, isFirstBusiness = true)
+              case Left(_) =>
+                StreamlineBusiness(None, None, None, None, None, isFirstBusiness = false)
               }
             case Some(maybeFirstBusiness) =>
               Future.successful(StreamlineBusiness(
@@ -104,7 +105,7 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
                 startDate = maybeFirstBusiness.startDate,
                 startDateBeforeLimit = maybeFirstBusiness.startDateBeforeLimit,
                 accountingMethod = maybeAccountingMethod,
-                isFirstBusiness = false
+                isFirstBusiness = businesses.headOption.exists(_.id == id)
               ))
           }
         case None => Future.successful(StreamlineBusiness(None, None, None, None, None, isFirstBusiness = true))
@@ -271,9 +272,10 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
   }
 
   def getNameAndTrade(
+    reference: String,
     id: String
   )(implicit hc: HeaderCarrier): Future[Either[GetSelfEmploymentsFailure, Option[NameAndTradeModel]]] = {
-    Future.successful(Right(Some(NameAndTradeModel(id = id, name = "", trade = "", isAgent = false))))
+    Future.successful(Right(None))
   }
 }
 

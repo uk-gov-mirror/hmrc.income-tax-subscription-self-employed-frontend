@@ -24,6 +24,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.AppConfig
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.DuplicatesController
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.utils.ReferenceRetrieval
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.individual.StreamlineIncomeSourceForm
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.agent.StreamlineBusiness
@@ -100,18 +101,14 @@ class FullIncomeSourceController @Inject()(fullIncomeSource: FullIncomeSource,
                     Redirect(routes.AddressLookupRoutingController.checkAddressLookupJourney(id, isEditMode))
                   })
                 case Left(SaveSelfEmploymentDataDuplicates) =>
-                  val uuid = UUID.randomUUID().toString
-                  multipleSelfEmploymentsService.saveNameAndTrade(NameAndTradeModel(
-                    id = uuid,
-                    name = name,
-                    trade = trade,
+                  DuplicatesController.duplicatesFound(
+                    multipleSelfEmploymentsService,
+                    reference,
+                    id,
+                    trade,
+                    name,
                     isAgent = false
-                  )).map {
-                    case Right(_) =>
-                      Redirect("").withSession("sessionId" -> uuid)
-                    case Left(_) =>
-                      throw new InternalServerException("[FullIncomeSourceController][submit] - Could not save sole trader full income source")
-                  }
+                  )
                 case Left(_) =>
                   throw new InternalServerException("[FullIncomeSourceController][submit] - Could not save sole trader full income source")
               }

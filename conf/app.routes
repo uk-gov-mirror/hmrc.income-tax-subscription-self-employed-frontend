@@ -41,5 +41,7 @@ POST       /details/sole-trader-business                uk.gov.hmrc.incometaxsub
 
 GET        /logout                                      uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.SignOutController.signOut
 
-GET         /keep-alive                                 uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.individual.SessionTimeoutController.keepAlive
-GET         /timeout                                    uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.individual.SessionTimeoutController.timeout
+GET        /keep-alive                                  uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.individual.SessionTimeoutController.keepAlive
+GET        /timeout                                     uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.individual.SessionTimeoutController.timeout
+
+GET        /deplicates                                  uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.DuplicatesController.show

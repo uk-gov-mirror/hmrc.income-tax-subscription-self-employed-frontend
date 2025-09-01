@@ -23,10 +23,11 @@ import play.twirl.api.Html
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.AppConfig
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.DuplicatesController
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.utils.ReferenceRetrieval
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.agent.StreamlineIncomeSourceForm
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.agent.StreamlineIncomeSourceForm.nextIncomeSourceForm
-import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.{ClientDetails, NameAndTradeModel, No, Yes}
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.{ClientDetails, No, Yes}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.MultipleSelfEmploymentsService.SaveSelfEmploymentDataDuplicates
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.{AuthService, ClientDetailsRetrieval, MultipleSelfEmploymentsService, SessionDataService}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities.ImplicitDateFormatter
@@ -34,7 +35,6 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.agent.Ne
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.play.language.LanguageUtils
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -135,18 +135,14 @@ class NextIncomeSourceController @Inject()(nextIncomeSource: NextIncomeSource,
           Redirect(routes.AddressLookupRoutingController.checkAddressLookupJourney(id, isEditMode))
         })
       case Left(SaveSelfEmploymentDataDuplicates) =>
-        val uuid = UUID.randomUUID().toString
-        multipleSelfEmploymentsService.saveNameAndTrade(NameAndTradeModel(
-          id = uuid,
-          name = name,
-          trade = trade,
+        DuplicatesController.duplicatesFound(
+          multipleSelfEmploymentsService,
+          reference,
+          id,
+          trade,
+          name,
           isAgent = true
-        )).map {
-          case Right(_) =>
-            Redirect("").withSession("sessionId" -> uuid)
-          case Left(_) =>
-            throw new InternalServerException("[FullIncomeSourceController][submit] - Could not save sole trader full income source")
-        }
+        )
       case Left(_) =>
         throw new InternalServerException("[FullIncomeSourceController][submit] - Could not save sole trader full income source")
     }
