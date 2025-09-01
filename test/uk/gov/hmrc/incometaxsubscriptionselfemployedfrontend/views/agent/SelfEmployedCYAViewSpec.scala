@@ -20,6 +20,8 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.agent.routes
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models._
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities.{AccountingPeriodUtil, ImplicitDateFormatter, ImplicitDateFormatterImpl, ViewSpec}
@@ -27,7 +29,12 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.agent.Se
 
 import java.time.format.DateTimeFormatter
 
-class SelfEmployedCYAViewSpec extends ViewSpec {
+class SelfEmployedCYAViewSpec extends ViewSpec with FeatureSwitching {
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(RemoveAccountingMethod)
+  }
 
   val implicitDateFormatter: ImplicitDateFormatter = app.injector.instanceOf[ImplicitDateFormatterImpl]
   val checkYourAnswers: SelfEmployedCYA = app.injector.instanceOf[SelfEmployedCYA]
@@ -73,6 +80,39 @@ class SelfEmployedCYAViewSpec extends ViewSpec {
           accountingMethodRow(value = None),
           addressRow(value = None)
         ))
+      }
+
+      "the remove accounting method feature switch is enabled" when {
+        "the first business" in {
+          enable(RemoveAccountingMethod)
+
+          document(answers = fullSelfEmploymentsCYAModel.copy(isFirstBusiness = true)).mainContent.mustHaveSummaryList(".govuk-summary-list")(Seq(
+            tradeRow(value = Some("Plumbing")),
+            nameRow(value = Some("ABC Limited")),
+            startDateRow(value = Some(CheckYourAnswersMessages.beforeLimit)),
+            addressRow(value = Some("line 1 TF3 4NT"))
+          ))
+        }
+        "the next business" in {
+          enable(RemoveAccountingMethod)
+
+          document(answers = fullSelfEmploymentsCYAModel.copy(isFirstBusiness = false)).mainContent.mustHaveSummaryList(".govuk-summary-list")(Seq(
+            tradeRow(value = Some("Plumbing")),
+            nameRow(value = Some("ABC Limited")),
+            startDateRow(value = Some(CheckYourAnswersMessages.beforeLimit)),
+            addressRow(value = Some("line 1 TF3 4NT"))
+          ))
+        }
+        "an empty business" in {
+          enable(RemoveAccountingMethod)
+
+          document(answers = emptySelfEmploymentsCYAModel).mainContent.mustHaveSummaryList(".govuk-summary-list")(Seq(
+            tradeRow(value = None),
+            nameRow(value = None),
+            startDateRow(value = None),
+            addressRow(value = None)
+          ))
+        }
       }
 
       "in edit mode" which {
@@ -257,7 +297,9 @@ class SelfEmployedCYAViewSpec extends ViewSpec {
         value = value,
         actions = Seq(
           SummaryListActionValues(
-            href = if (isFirstBusiness) {
+            href = if (isEnabled(RemoveAccountingMethod)) {
+              routes.FullIncomeSourceController.show(testId, isEditMode = true, isGlobalEdit = globalEditMode).url
+            } else if (isFirstBusiness) {
               routes.FirstIncomeSourceController.show(testId, isEditMode = true, isGlobalEdit = globalEditMode).url
             } else {
               routes.NextIncomeSourceController.show(testId, isEditMode = true, isGlobalEdit = globalEditMode).url

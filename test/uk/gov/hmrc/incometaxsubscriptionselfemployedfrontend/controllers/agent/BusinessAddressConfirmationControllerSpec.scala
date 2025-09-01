@@ -24,6 +24,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{HTML, await, contentType, defaultAwaitTimeout, redirectLocation, status}
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.http.InternalServerException
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.httpparser.GetSelfEmploymentsHttpParser
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.httpparser.PostSelfEmploymentsHttpParser.PostSubscriptionDetailsSuccessResponse
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.ControllerBaseSpec
@@ -39,7 +41,7 @@ import scala.concurrent.Future
 
 class BusinessAddressConfirmationControllerSpec extends ControllerBaseSpec
   with MockSessionDataService with MockMultipleSelfEmploymentsService
-  with MockClientDetailsRetrieval {
+  with MockClientDetailsRetrieval with FeatureSwitching {
 
   val id: String = "testId"
   val name: String = "FirstName LastName"
@@ -62,6 +64,11 @@ class BusinessAddressConfirmationControllerSpec extends ControllerBaseSpec
     mockSessionDataService,
     appConfig
   )
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(RemoveAccountingMethod)
+  }
 
   override val controllerName: String = "BusinessNameConfirmationController"
   override val authorisedRoutes: Map[String, Action[AnyContent]] = Map(
@@ -106,22 +113,47 @@ class BusinessAddressConfirmationControllerSpec extends ControllerBaseSpec
       }
     }
     "return OK with the page content" when {
-      "a previous business address was found" in new Setup {
-        mockAuthSuccess()
-        mockFetchFirstAddress(Right(Some(address)))
+      "a previous business address was found" which {
+        "has a back link to the full income source page" when {
+          "the remove accounting method feature switch is enabled" in new Setup {
+            enable(RemoveAccountingMethod)
 
-        when(mockBusinessAddressConfirmation(
-          ArgumentMatchers.any(),
-          ArgumentMatchers.eq(routes.BusinessAddressConfirmationController.submit(id)),
-          ArgumentMatchers.eq(routes.FirstIncomeSourceController.show(id).url),
-          ArgumentMatchers.eq(address),
-          ArgumentMatchers.any()
-        )(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(HtmlFormat.empty)
+            mockAuthSuccess()
+            mockFetchFirstAddress(Right(Some(address)))
 
-        val response: Future[Result] = controller.show(id)(fakeRequest)
+            when(mockBusinessAddressConfirmation(
+              ArgumentMatchers.any(),
+              ArgumentMatchers.eq(routes.BusinessAddressConfirmationController.submit(id)),
+              ArgumentMatchers.eq(routes.FullIncomeSourceController.show(id).url),
+              ArgumentMatchers.eq(address),
+              ArgumentMatchers.any()
+            )(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(HtmlFormat.empty)
 
-        status(response) mustBe OK
-        contentType(response) mustBe Some(HTML)
+            val response: Future[Result] = controller.show(id)(fakeRequest)
+
+            status(response) mustBe OK
+            contentType(response) mustBe Some(HTML)
+          }
+        }
+        "has a back link to the first income source page" when {
+          "the remove accounting method feature switch is disabled" in new Setup {
+            mockAuthSuccess()
+            mockFetchFirstAddress(Right(Some(address)))
+
+            when(mockBusinessAddressConfirmation(
+              ArgumentMatchers.any(),
+              ArgumentMatchers.eq(routes.BusinessAddressConfirmationController.submit(id)),
+              ArgumentMatchers.eq(routes.FirstIncomeSourceController.show(id).url),
+              ArgumentMatchers.eq(address),
+              ArgumentMatchers.any()
+            )(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(HtmlFormat.empty)
+
+            val response: Future[Result] = controller.show(id)(fakeRequest)
+
+            status(response) mustBe OK
+            contentType(response) mustBe Some(HTML)
+          }
+        }
       }
     }
   }

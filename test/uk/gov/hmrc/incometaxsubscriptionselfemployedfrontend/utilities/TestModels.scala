@@ -18,8 +18,6 @@ package uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities
 
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models._
 
-import java.time.LocalDate
-
 object TestModels {
 
   val testValidStartDateAfterLimit: DateModel = DateModel.dateConvert(AccountingPeriodUtil.getStartDateLimit)

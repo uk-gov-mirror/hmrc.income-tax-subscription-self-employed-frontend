@@ -23,8 +23,17 @@ import helpers.servicemocks.AuthStub.stubAuthSuccess
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.SelfEmploymentDataKeys.soleTraderBusinessesKey
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.AppConfig
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
 
-class InitialiseControllerISpec extends ComponentSpecBase {
+class InitialiseControllerISpec extends ComponentSpecBase with FeatureSwitching {
+
+  val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(RemoveAccountingMethod)
+  }
 
   "GET /report-quarterly/income-and-expenses/sign-up/self-employments/details" when {
 
@@ -82,6 +91,39 @@ class InitialiseControllerISpec extends ComponentSpecBase {
       res must have(
         httpStatus(INTERNAL_SERVER_ERROR))
     }
-  }
 
+    "the remove accounting method feature switch is enabled" should {
+      "redirect to full income source page when there is already at least 1 business without accounting method" in {
+        enable(RemoveAccountingMethod)
+        Given("I setup the Wiremock stubs")
+        stubAuthSuccess()
+        stubGetSubscriptionData(reference, soleTraderBusinessesKey)(OK, Json.toJson(soleTraderBusinesses.copy(accountingMethod = None)))
+
+        When("GET /details is called")
+        val res = getInitialise
+
+        Then("I should redirect to full income source page")
+        res must have(
+          httpStatus(SEE_OTHER),
+          redirectURI("/details/sole-trader-business")
+        )
+      }
+
+      "redirect to full income source page if there are no previous businesses" in {
+        enable(RemoveAccountingMethod)
+        Given("I setup the Wiremock stubs")
+        stubAuthSuccess()
+        stubGetSubscriptionData(reference, soleTraderBusinessesKey)(NO_CONTENT)
+
+        When("GET /details is called")
+        val res = getInitialise
+
+        Then("I should redirect to full income source page")
+        res must have(
+          httpStatus(SEE_OTHER),
+          redirectURI("/details/sole-trader-business")
+        )
+      }
+    }
+  }
 }

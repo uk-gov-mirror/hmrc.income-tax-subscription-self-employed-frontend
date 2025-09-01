@@ -31,19 +31,14 @@ class AppConfig @Inject()(servicesConfig: ServicesConfig, val config: Configurat
   lazy val incomeTaxSubscriptionSelfEmployedFrontendBaseUrl: String = servicesConfig.getString("income-tax-subscription-self-employed-frontend.url")
 
   //  Individual routes
-  lazy val whatIncomeSourceToSignUpUrl: String = incomeTaxSubscriptionFrontendBaseUrl + "/details/income-source"
   lazy val yourIncomeSourcesUrl: String = incomeTaxSubscriptionFrontendBaseUrl + "/details/your-income-source"
-  lazy val taskListUrl: String = incomeTaxSubscriptionFrontendBaseUrl + "/business/task-list"
   lazy val subscriptionFrontendProgressSavedUrl: String = incomeTaxSubscriptionFrontendBaseUrl + "/business/progress-saved"
   lazy val individualGlobalCYAUrl: String = incomeTaxSubscriptionFrontendBaseUrl + "/final-check-your-answers"
 
   //  Agent routes
   lazy val subscriptionFrontendClientProgressSavedUrl: String = incomeTaxSubscriptionFrontendBaseUrl + "/client/business/progress-saved"
-  lazy val clientWhatIncomeSourceToSignUpUrl: String = incomeTaxSubscriptionFrontendBaseUrl + "/client/income-source"
   lazy val clientYourIncomeSourcesUrl: String = incomeTaxSubscriptionFrontendBaseUrl + "/client/your-income-source"
-  lazy val clientTaskListUrl: String = incomeTaxSubscriptionFrontendBaseUrl + "/client/business/task-list"
   lazy val globalCYAUrl: String = incomeTaxSubscriptionFrontendBaseUrl + "/client/final-check-your-answers"
-
 
   private lazy val ggUrl: String = servicesConfig.getString(s"government-gateway.url")
   lazy val addressLookupUrl: String = servicesConfig.baseUrl("address-lookup-frontend")

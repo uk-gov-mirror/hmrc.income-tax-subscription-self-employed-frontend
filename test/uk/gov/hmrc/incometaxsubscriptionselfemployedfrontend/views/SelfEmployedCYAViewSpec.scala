@@ -20,6 +20,8 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.individual.routes
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models._
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities.{AccountingPeriodUtil, ImplicitDateFormatter, ImplicitDateFormatterImpl, ViewSpec}
@@ -27,7 +29,12 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.SelfEmpl
 
 import java.time.format.DateTimeFormatter
 
-class SelfEmployedCYAViewSpec extends ViewSpec {
+class SelfEmployedCYAViewSpec extends ViewSpec with FeatureSwitching {
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(RemoveAccountingMethod)
+  }
 
   val checkYourAnswers: SelfEmployedCYA = app.injector.instanceOf[SelfEmployedCYA]
   val implicitDateFormatter: ImplicitDateFormatter = app.injector.instanceOf[ImplicitDateFormatterImpl]
@@ -181,6 +188,103 @@ class SelfEmployedCYAViewSpec extends ViewSpec {
             accountingMethodRow(Some("Cash basis accounting"), multipleBusinesses = false)
           )
         )
+      }
+    }
+
+    "have a summary of the self employment answers without accounting method" when {
+      "remove accounting method feature switch is enabled" when {
+        "in edit mode" when {
+          "the answers are complete" in {
+            enable(RemoveAccountingMethod)
+            document().mainContent.mustHaveSummaryList(".govuk-summary-list")(
+              rows = Seq(
+                tradeRow(Some("Plumbing")),
+                nameRow(Some("ABC Limited")),
+                startDateRow(Some(CheckYourAnswersMessages.startDateBeforeLimitLabel)),
+                addressRow(Some("line 1 TF3 4NT"))
+              )
+            )
+          }
+          "there exists multiple businesses" in {
+            enable(RemoveAccountingMethod)
+            document(multiBusinessCYAModel).mainContent.mustHaveSummaryList(".govuk-summary-list")(
+              rows = Seq(
+                tradeRow(Some("Plumbing")),
+                nameRow(Some("ABC Limited")),
+                startDateRow(Some(CheckYourAnswersMessages.startDateBeforeLimitLabel)),
+                addressRow(Some("line 1 TF3 4NT"))
+              )
+            )
+          }
+          "the answers are not complete" in {
+            enable(RemoveAccountingMethod)
+            document(emptySelfEmploymentsCYAModel).mainContent.mustHaveSummaryList(".govuk-summary-list")(
+              rows = Seq(
+                tradeRow(None),
+                nameRow(None),
+                startDateRow(None),
+                addressRow(None)
+              )
+            )
+          }
+        }
+        "in global mode" when {
+          "the answers are complete" in {
+            enable(RemoveAccountingMethod)
+            document(isGlobalEdit = true).mainContent.mustHaveSummaryList(".govuk-summary-list")(
+              rows = Seq(
+                tradeRow(Some("Plumbing"), globalEditMode = true),
+                nameRow(Some("ABC Limited"), globalEditMode = true),
+                startDateRow(Some(CheckYourAnswersMessages.startDateBeforeLimitLabel), globalEditMode = true),
+                addressRow(Some("line 1 TF3 4NT"), globalEditMode = true)
+              )
+            )
+          }
+          "there exists multiple businesses" in {
+            enable(RemoveAccountingMethod)
+            document(multiBusinessCYAModel, isGlobalEdit = true).mainContent.mustHaveSummaryList(".govuk-summary-list")(
+              rows = Seq(
+                tradeRow(Some("Plumbing"), globalEditMode = true),
+                nameRow(Some("ABC Limited"), globalEditMode = true),
+                startDateRow(Some(CheckYourAnswersMessages.startDateBeforeLimitLabel), globalEditMode = true),
+                addressRow(Some("line 1 TF3 4NT"), globalEditMode = true)
+              )
+            )
+          }
+          "the answers are not complete" in {
+            enable(RemoveAccountingMethod)
+            document(emptySelfEmploymentsCYAModel, isGlobalEdit = true).mainContent.mustHaveSummaryList(".govuk-summary-list")(
+              rows = Seq(
+                tradeRow(None, globalEditMode = true),
+                nameRow(None, globalEditMode = true),
+                startDateRow(None, globalEditMode = true),
+                addressRow(None, globalEditMode = true)
+              )
+            )
+          }
+        }
+        "start date is before the limit" in {
+          enable(RemoveAccountingMethod)
+          document(fullSelfEmploymentsCYAModel.copy(businessStartDate = Some(olderThanLimitDate))).mainContent.mustHaveSummaryList(".govuk-summary-list")(
+            rows = Seq(
+              tradeRow(Some("Plumbing")),
+              nameRow(Some("ABC Limited")),
+              startDateRow(value = Some(CheckYourAnswersMessages.startDateBeforeLimitLabel)),
+              addressRow(Some("line 1 TF3 4NT"))
+            )
+          )
+        }
+        "start date is after the limit" in {
+          enable(RemoveAccountingMethod)
+          document(fullSelfEmploymentsCYAModel.copy(businessStartDate = Some(limitDate))).mainContent.mustHaveSummaryList(".govuk-summary-list")(
+            rows = Seq(
+              tradeRow(Some("Plumbing")),
+              nameRow(Some("ABC Limited")),
+              startDateRow(value = Some(limitDate.toLocalDate.format(DateTimeFormatter.ofPattern("d MMMM yyy")))),
+              addressRow(Some("line 1 TF3 4NT"))
+            )
+          )
+        }
       }
     }
 

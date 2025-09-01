@@ -23,6 +23,8 @@
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.agent.routes
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.helpers.injected.PageHeadingHelper
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities.AccountingPeriodUtil
+@import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitchingImpl
+@import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
 
 @this(
         mainTemplate: AgentMainTemplate,
@@ -30,7 +32,8 @@
         govukSummaryList: GovukSummaryList,
         saveAndContinueButtonHelper: SaveAndContinueButtonHelper,
         implicitDateFormatter: ImplicitDateFormatterImpl,
-        pageHeadingHelper: PageHeadingHelper
+        pageHeadingHelper: PageHeadingHelper,
+        featureSwitching: FeatureSwitchingImpl
 )
 
 @(answers: SelfEmploymentsCYAModel, postAction: Call, backUrl: Option[String], clientDetails: ClientDetails, isGlobalEdit: Boolean)(implicit request: Request[_], messages: Messages)
@@ -51,7 +54,7 @@
             Some(businessTrade(answers.businessTradeName, answers.id, answers.isFirstBusiness)),
             Some(businessName(answers.businessName, answers.id, answers.isFirstBusiness)),
             Some(tradingStartDate(answers.businessStartDate, answers.startDateBeforeLimit, answers.id, answers.isFirstBusiness)),
-            if(answers.isFirstBusiness) {
+            if(answers.isFirstBusiness && featureSwitching.isDisabled(RemoveAccountingMethod)) {
                 Some(accountingMethod(answers.accountingMethod, answers.id, true))
             } else {
                 None
@@ -89,11 +92,15 @@
     simpleSummaryListRow(
         key = messages("agent.self-employed-cya.business-name"),
         value = businessName,
-        changeHref = if(isFirstIncomeSourceCompleted) {
+        changeHref = if(featureSwitching.isEnabled(RemoveAccountingMethod)) {
+            routes.FullIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url
+        } else {
+            if(isFirstIncomeSourceCompleted) {
                 routes.FirstIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url
             } else {
                 routes.NextIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url
-            },
+            }
+        },
         id = businessId
     )
 }
@@ -108,10 +115,14 @@
         } else {
             businessStartDate.map(_.toLocalDate.toLongDate())
         },
-        changeHref = if(isFirstIncomeSourceCompleted) {
-            routes.FirstIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url
+        changeHref = if(featureSwitching.isEnabled(RemoveAccountingMethod)) {
+            routes.FullIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url
         } else {
-            routes.NextIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url
+            if(isFirstIncomeSourceCompleted) {
+                routes.FirstIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url
+            } else {
+                routes.NextIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url
+            }
         },
         id = businessId
     )
@@ -121,11 +132,15 @@
     simpleSummaryListRow(
         key = messages("agent.self-employed-cya.business-trade.streamline"),
         value = businessTrade,
-        changeHref = if(isFirstIncomeSourceCompleted) {
+        changeHref = if(featureSwitching.isEnabled(RemoveAccountingMethod)) {
+            routes.FullIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url
+        } else {
+            if(isFirstIncomeSourceCompleted) {
                 routes.FirstIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url
             } else {
                 routes.NextIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url
-            },
+            }
+        },
         id = businessId,
         hiddenText = Some(messages("agent.self-employed-cya.business-trade.change-hidden"))
     )
@@ -150,5 +165,5 @@
         },
         changeHref = routes.FirstIncomeSourceController.show(businessId, isEditMode = true, isGlobalEdit = isGlobalEdit).url,
         id = businessId
-        )
-    }
+    )
+}

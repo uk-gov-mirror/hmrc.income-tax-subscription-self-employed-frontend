@@ -22,6 +22,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
 import play.twirl.api.Html
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.AppConfig
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.utils.ReferenceRetrieval
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.individual.StreamlineIncomeSourceForm
@@ -141,6 +142,8 @@ class FullIncomeSourceController @Inject()(fullIncomeSource: FullIncomeSource,
   def backUrl(id: String, isEditMode: Boolean, isGlobalEdit: Boolean, isFirstBusiness: Boolean): String = {
     if (isEditMode || isGlobalEdit) {
       routes.SelfEmployedCYAController.show(id, isEditMode, isGlobalEdit).url
+    } else if (isEnabled(RemoveAccountingMethod)) {
+      appConfig.yourIncomeSourcesUrl
     } else if (isFirstBusiness) {
       routes.BusinessAccountingMethodController.show(id).url
     } else {

@@ -20,7 +20,8 @@
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.templates.PrincipalMainTemplate
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.models.ChangeLink
 @import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities.AccountingPeriodUtil
-
+@import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
+@import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitchingImpl
 
 @this(
     mainTemplate: PrincipalMainTemplate,
@@ -28,7 +29,8 @@
     govukSummaryList: GovukSummaryList,
     saveAndContinueButtonHelper: SaveAndContinueButtonHelper,
     implicitDateFormatter: ImplicitDateFormatterImpl,
-    pageHeadingHelper: PageHeadingHelper
+    pageHeadingHelper: PageHeadingHelper,
+    featureSwitching: FeatureSwitchingImpl
 )
 
 @(answers: SelfEmploymentsCYAModel, postAction: Call, backUrl: Option[String], isGlobalEdit: Boolean)(implicit request: Request[_], messages: Messages)
@@ -49,8 +51,11 @@
             businessTrade(answers.businessTradeName, answers.id),
             businessName(answers.businessName, answers.id),
             tradingStartDate(answers.businessStartDate, answers.startDateBeforeLimit, answers.id),
-            businessAddress(answers.businessAddress, answers.id),
-            accountingMethod(answers.accountingMethod, answers.totalSelfEmployments, answers.id)
+            businessAddress(answers.businessAddress, answers.id)
+        ) ++ (if (!featureSwitching.isEnabled(RemoveAccountingMethod))
+                Seq(accountingMethod(answers.accountingMethod, answers.totalSelfEmployments, answers.id))
+             else
+                Seq.empty
         )
     ))
 

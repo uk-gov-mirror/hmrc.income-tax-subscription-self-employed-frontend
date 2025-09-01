@@ -22,6 +22,8 @@ import play.api.mvc._
 import play.twirl.api.Html
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.AppConfig
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.utils.ReferenceRetrieval
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.agent.BusinessStartDateForm
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.agent.BusinessStartDateForm.businessStartDateForm
@@ -46,7 +48,7 @@ class BusinessStartDateController @Inject()(mcc: MessagesControllerComponents,
                                             val languageUtils: LanguageUtils,
                                             val appConfig: AppConfig)
                                            (implicit val ec: ExecutionContext)
-  extends FrontendController(mcc) with ReferenceRetrieval with I18nSupport with ImplicitDateFormatter {
+  extends FrontendController(mcc) with ReferenceRetrieval with I18nSupport with ImplicitDateFormatter with FeatureSwitching {
 
   def view(businessStartDateForm: Form[DateModel], id: String, isEditMode: Boolean, isGlobalEdit: Boolean, clientDetails: ClientDetails, businessTrade: String)
           (implicit request: Request[AnyContent]): Html = {
@@ -75,7 +77,11 @@ class BusinessStartDateController @Inject()(mcc: MessagesControllerComponents,
               ))
             }
           case Right(_) =>
-            Future.successful(Redirect(routes.FirstIncomeSourceController.show(id, isEditMode, isGlobalEdit)))
+            if (isEnabled(RemoveAccountingMethod)) {
+              Future.successful(Redirect(routes.FullIncomeSourceController.show(id, isEditMode, isGlobalEdit)))
+            } else {
+              Future.successful(Redirect(routes.FirstIncomeSourceController.show(id, isEditMode, isGlobalEdit)))
+            }
           case Left(error) =>
             throw new InternalServerException(s"[BusinessStartDateController][show] - ${error.toString}")
         }
@@ -119,7 +125,11 @@ class BusinessStartDateController @Inject()(mcc: MessagesControllerComponents,
   )
 
   def backUrl(id: String, isEditMode: Boolean, isGlobalEdit: Boolean): String = {
-    routes.FirstIncomeSourceController.show(id, isEditMode, isGlobalEdit).url
+    if (isEnabled(RemoveAccountingMethod)) {
+      routes.FullIncomeSourceController.show(id, isEditMode, isGlobalEdit).url
+    } else {
+      routes.FirstIncomeSourceController.show(id, isEditMode, isGlobalEdit).url
+    }
   }
 
   def form(implicit request: Request[_]): Form[DateModel] = {

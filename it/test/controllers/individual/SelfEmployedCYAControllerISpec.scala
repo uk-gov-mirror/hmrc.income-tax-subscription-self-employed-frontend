@@ -24,9 +24,11 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
 import play.api.libs.json.Json
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.SelfEmploymentDataKeys.{incomeSourcesComplete, soleTraderBusinessesKey}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.AppConfig
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.SoleTraderBusinesses
 
-class SelfEmployedCYAControllerISpec extends ComponentSpecBase {
+class SelfEmployedCYAControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
   val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
@@ -99,7 +101,7 @@ class SelfEmployedCYAControllerISpec extends ComponentSpecBase {
           stubDeleteSubscriptionData(reference, incomeSourcesComplete)(OK)
 
           When("POST /details/business-check-your-answers is called")
-          val res =submitBusinessCheckYourAnswers(id, isGlobalEdit = true)
+          val res = submitBusinessCheckYourAnswers(id, isGlobalEdit = true)
 
           Then("Should return a SEE_OTHER with a redirect location of Global CYA page")
           res must have(
@@ -110,6 +112,7 @@ class SelfEmployedCYAControllerISpec extends ComponentSpecBase {
       }
 
       "the user submits valid incomplete data" in {
+        disable(RemoveAccountingMethod)
         Given("I setup the Wiremock stubs")
         stubAuthSuccess()
         stubGetSubscriptionData(reference, soleTraderBusinessesKey)(OK, Json.toJson(incompleteSoleTraderBusinesses))
@@ -153,6 +156,48 @@ class SelfEmployedCYAControllerISpec extends ComponentSpecBase {
         res must have(
           httpStatus(INTERNAL_SERVER_ERROR)
         )
+      }
+    }
+
+    "remove accounting method feature switch is enabled" should {
+      "redirect to the your income source page" when {
+        "the user submits valid full data without accounting method" in {
+          enable(RemoveAccountingMethod)
+          Given("I setup the Wiremock stubs")
+          stubAuthSuccess()
+          stubGetSubscriptionData(reference, soleTraderBusinessesKey)(OK, Json.toJson(soleTraderBusinesses))
+          stubSaveSubscriptionData(reference, soleTraderBusinessesKey, Json.toJson(completeSoleTraderBusinesses))(OK)
+          stubDeleteSubscriptionData(reference, incomeSourcesComplete)(OK)
+
+          When("GET /details/business-check-your-answers is called")
+          val res = submitBusinessCheckYourAnswers(id, isGlobalEdit = false)
+
+          Then("Should return a SEE_OTHER with a redirect location of task list page")
+          res must have(
+            httpStatus(SEE_OTHER),
+            redirectURI(yourIncomeSources)
+          )
+        }
+
+        "redirect to Global CYA page" when {
+          "isGlobalEdit is true and the user submits valid full data without accounting method" in {
+            enable(RemoveAccountingMethod)
+            Given("I setup the Wiremock stubs")
+            stubAuthSuccess()
+            stubGetSubscriptionData(reference, soleTraderBusinessesKey)(OK, Json.toJson(soleTraderBusinesses))
+            stubSaveSubscriptionData(reference, soleTraderBusinessesKey, Json.toJson(completeSoleTraderBusinesses))(OK)
+            stubDeleteSubscriptionData(reference, incomeSourcesComplete)(OK)
+
+            When("POST /details/business-check-your-answers is called")
+            val res = submitBusinessCheckYourAnswers(id, isGlobalEdit = true)
+
+            Then("Should return a SEE_OTHER with a redirect location of Global CYA page")
+            res must have(
+              httpStatus(SEE_OTHER),
+              redirectURI(individualGlobalCYAUri)
+            )
+          }
+        }
       }
     }
   }

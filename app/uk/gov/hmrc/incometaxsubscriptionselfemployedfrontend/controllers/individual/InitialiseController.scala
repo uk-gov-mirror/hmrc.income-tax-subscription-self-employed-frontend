@@ -20,6 +20,7 @@ import _root_.uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities.UU
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.AppConfig
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.utils.ReferenceRetrieval
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.SoleTraderBusinesses
@@ -47,7 +48,11 @@ class InitialiseController @Inject()(mcc: MessagesControllerComponents,
           case Right(Some(SoleTraderBusinesses(_, Some(_)))) =>
             Redirect(routes.FullIncomeSourceController.show(id))
           case Right(_) =>
-            Redirect(routes.BusinessAccountingMethodController.show(id))
+            if (isEnabled(RemoveAccountingMethod)) {
+              Redirect(routes.FullIncomeSourceController.show(id))
+            } else {
+              Redirect(routes.BusinessAccountingMethodController.show(id))
+            }
           case Left(_) =>
             throw new InternalServerException("[InitialiseController][initialise] - Failure fetching sole trader businesses")
         }

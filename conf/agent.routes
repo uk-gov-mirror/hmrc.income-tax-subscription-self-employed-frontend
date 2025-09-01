@@ -8,6 +8,10 @@ GET         /details                                   uk.gov.hmrc.incometaxsubs
 GET         /details/business-start-date               uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.agent.BusinessStartDateController.show(id: String, isEditMode: Boolean ?= false, isGlobalEdit: Boolean ?= false)
 POST        /details/business-start-date               uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.agent.BusinessStartDateController.submit(id: String, isEditMode: Boolean ?= false, isGlobalEdit: Boolean ?= false)
 
+# Full Income Source
+GET         /details/sole-trader-business              uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.agent.FullIncomeSourceController.show(id: String, isEditMode: Boolean ?= false, isGlobalEdit: Boolean ?= false)
+POST        /details/sole-trader-business              uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.agent.FullIncomeSourceController.submit(id: String, isEditMode: Boolean ?= false, isGlobalEdit: Boolean ?= false)
+
 # First Income Source
 GET         /details/initial-sole-trader-business      uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.agent.FirstIncomeSourceController.show(id: String, isEditMode: Boolean ?= false, isGlobalEdit: Boolean ?= false)
 POST        /details/initial-sole-trader-business      uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.agent.FirstIncomeSourceController.submit(id: String, isEditMode: Boolean ?= false, isGlobalEdit: Boolean ?= false)

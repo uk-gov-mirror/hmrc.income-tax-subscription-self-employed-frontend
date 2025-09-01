@@ -19,6 +19,8 @@ package uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.agent
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.AppConfig
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.utils.ReferenceRetrieval
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.SoleTraderBusinesses
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.{AuthService, MultipleSelfEmploymentsService, SessionDataService}
@@ -26,7 +28,7 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities.UUIDGener
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class InitialiseController @Inject()(mcc: MessagesControllerComponents,
@@ -36,19 +38,23 @@ class InitialiseController @Inject()(mcc: MessagesControllerComponents,
                                     (val appConfig: AppConfig,
                                      val sessionDataService: SessionDataService)
                                     (implicit val ec: ExecutionContext)
-  extends FrontendController(mcc) with ReferenceRetrieval {
+  extends FrontendController(mcc) with ReferenceRetrieval with FeatureSwitching {
 
   val initialise: Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
       val id = uuidGen.generateId
-      withAgentReference { reference =>
-        multipleSelfEmploymentsService.fetchSoleTraderBusinesses(reference) map {
-          case Right(Some(SoleTraderBusinesses(businesses, _))) if businesses.nonEmpty =>
-            Redirect(routes.NextIncomeSourceController.show(id))
-          case Right(_) =>
-            Redirect(routes.FirstIncomeSourceController.show(id))
-          case Left(_) =>
-            throw new InternalServerException("[InitialiseController][initialise] - Failure fetching sole trader businesses")
+      if (isEnabled(RemoveAccountingMethod)) {
+        Future.successful(Redirect(routes.FullIncomeSourceController.show(id)))
+      } else {
+        withAgentReference { reference =>
+          multipleSelfEmploymentsService.fetchSoleTraderBusinesses(reference) map {
+            case Right(Some(SoleTraderBusinesses(businesses, _))) if businesses.nonEmpty =>
+              Redirect(routes.NextIncomeSourceController.show(id))
+            case Right(_) =>
+              Redirect(routes.FirstIncomeSourceController.show(id))
+            case Left(_) =>
+              throw new InternalServerException("[InitialiseController][initialise] - Failure fetching sole trader businesses")
+          }
         }
       }
     }

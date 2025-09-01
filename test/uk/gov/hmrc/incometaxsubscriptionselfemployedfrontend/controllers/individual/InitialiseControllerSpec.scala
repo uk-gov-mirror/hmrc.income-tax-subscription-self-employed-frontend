@@ -21,6 +21,7 @@ import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.mvc.{Action, AnyContent}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.InternalServerException
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.httpparser.GetSelfEmploymentsHttpParser.UnexpectedStatusFailure
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.ControllerBaseSpec
@@ -88,6 +89,33 @@ class InitialiseControllerSpec extends ControllerBaseSpec with MockMultipleSelfE
 
       intercept[InternalServerException](await(TestInitialiseController.initialise(fakeRequest)))
         .message mustBe "[InitialiseController][initialise] - Failure fetching sole trader businesses"
+    }
+
+    "when remove accounting method feature switch is enabled" should {
+      s"return $SEE_OTHER and redirect to Full Income Source page when a business already exists without accounting method" in {
+        enable(RemoveAccountingMethod)
+        mockAuthSuccess()
+        mockFetchSoleTraderBusinesses(Right(Some(SoleTraderBusinesses(
+          businesses = Seq(SoleTraderBusiness(id = "firstId"))))))
+
+        val result = TestInitialiseController.initialise(fakeRequest)
+
+        status(result) mustBe SEE_OTHER
+        redirectLocation(result) mustBe Some(routes.FullIncomeSourceController.show(id = "testId").url)
+      }
+
+      s"return $SEE_OTHER and redirect to Full Income Source page when adding a business" in {
+        enable(RemoveAccountingMethod)
+        mockAuthSuccess()
+        mockFetchSoleTraderBusinesses(Right(Some(SoleTraderBusinesses(
+          businesses = Seq.empty,
+          accountingMethod = None))))
+
+        val result = TestInitialiseController.initialise(fakeRequest)
+
+        status(result) mustBe SEE_OTHER
+        redirectLocation(result) mustBe Some(routes.FullIncomeSourceController.show(id = "testId").url)
+      }
     }
   }
 

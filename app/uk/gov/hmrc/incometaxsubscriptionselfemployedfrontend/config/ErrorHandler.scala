@@ -31,7 +31,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class ErrorHandler @Inject()( val errorTemplate: ErrorTemplate,
+class ErrorHandler @Inject()(val errorTemplate: ErrorTemplate,
                              val appConfig: AppConfig,
                              val messagesApi: MessagesApi,
                              val config: Configuration,

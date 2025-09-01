@@ -25,6 +25,8 @@ import play.api.mvc.{Action, AnyContent, Result}
 import play.api.test.Helpers.{HTML, await, contentType, defaultAwaitTimeout, redirectLocation, status}
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.http.InternalServerException
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitch.RemoveAccountingMethod
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.featureswitch.FeatureSwitching
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.httpparser.GetSelfEmploymentsHttpParser.UnexpectedStatusFailure
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.connectors.httpparser.PostSelfEmploymentsHttpParser.PostSubscriptionDetailsSuccessResponse
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.ControllerBaseSpec
@@ -43,7 +45,8 @@ class BusinessStartDateControllerSpec extends ControllerBaseSpec
   with MockMultipleSelfEmploymentsService
   with MockSessionDataService
   with MockClientDetailsRetrieval
-  with ImplicitDateFormatter {
+  with ImplicitDateFormatter
+  with FeatureSwitching {
 
   val businessStartDate: BusinessStartDate = mock[BusinessStartDate]
   val id: String = "testId"
@@ -57,6 +60,7 @@ class BusinessStartDateControllerSpec extends ControllerBaseSpec
 
   override def beforeEach(): Unit = {
     super.beforeEach()
+    disable(RemoveAccountingMethod)
     reset(businessStartDate)
   }
 
@@ -99,69 +103,135 @@ class BusinessStartDateControllerSpec extends ControllerBaseSpec
   }
 
   "show" must {
-    "return the page content" when {
-      "there is a saved business" which {
-        "has a start date and a trade" in {
-          mockAuthSuccess()
-          mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id = id, startDate = Some(DateModel.dateConvert(LocalDate.now)), trade = Some("test trade")))))
-          mockGetClientDetails()
-          mockBusinessStartDate(
-            backUrl = routes.FirstIncomeSourceController.show(id).url,
-            trade = "test trade"
-          )
+    "return the page content" which {
+      "has a back link to the full income source page" when {
+        "the remove accounting method feature switch is enabled" when {
+          "there is a saved business" which {
+            "has a start date and a trade" in {
+              enable(RemoveAccountingMethod)
 
-          val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = false, isGlobalEdit = false)(fakeRequest)
+              mockAuthSuccess()
+              mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id = id, startDate = Some(DateModel.dateConvert(LocalDate.now)), trade = Some("test trade")))))
+              mockGetClientDetails()
+              mockBusinessStartDate(
+                backUrl = routes.FullIncomeSourceController.show(id).url,
+                trade = "test trade"
+              )
 
-          status(result) mustBe OK
-          contentType(result) mustBe Some(HTML)
+              val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = false, isGlobalEdit = false)(fakeRequest)
+
+              status(result) mustBe OK
+              contentType(result) mustBe Some(HTML)
+            }
+            "has no start date but has a trade" in {
+              enable(RemoveAccountingMethod)
+
+              mockAuthSuccess()
+              mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id = id, trade = Some("test trade")))))
+              mockGetClientDetails()
+              mockBusinessStartDate(
+                backUrl = routes.FullIncomeSourceController.show(id).url,
+                trade = "test trade"
+              )
+
+              val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = false, isGlobalEdit = false)(fakeRequest)
+
+              status(result) mustBe OK
+              contentType(result) mustBe Some(HTML)
+            }
+          }
         }
-        "has no start date but has a trade" in {
-          mockAuthSuccess()
-          mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id = id, trade = Some("test trade")))))
-          mockGetClientDetails()
-          mockBusinessStartDate(
-            backUrl = routes.FirstIncomeSourceController.show(id).url,
-            trade = "test trade"
-          )
+      }
+      "has a back link to the first income source page" when {
+        "the remove accounting method feature switch is disabled" when {
+          "there is a saved business" which {
+            "has a start date and a trade" in {
+              mockAuthSuccess()
+              mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id = id, startDate = Some(DateModel.dateConvert(LocalDate.now)), trade = Some("test trade")))))
+              mockGetClientDetails()
+              mockBusinessStartDate(
+                backUrl = routes.FirstIncomeSourceController.show(id).url,
+                trade = "test trade"
+              )
 
-          val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = false, isGlobalEdit = false)(fakeRequest)
+              val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = false, isGlobalEdit = false)(fakeRequest)
 
-          status(result) mustBe OK
-          contentType(result) mustBe Some(HTML)
+              status(result) mustBe OK
+              contentType(result) mustBe Some(HTML)
+            }
+            "has no start date but has a trade" in {
+              mockAuthSuccess()
+              mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id = id, trade = Some("test trade")))))
+              mockGetClientDetails()
+              mockBusinessStartDate(
+                backUrl = routes.FirstIncomeSourceController.show(id).url,
+                trade = "test trade"
+              )
+
+              val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = false, isGlobalEdit = false)(fakeRequest)
+
+              status(result) mustBe OK
+              contentType(result) mustBe Some(HTML)
+            }
+          }
         }
       }
     }
     "redirect to the streamline page" when {
       "there is no trade stored in the business" when {
-        "not in edit mode" in {
+        "the remove accounting method feature switch is enabled" in {
+          enable(RemoveAccountingMethod)
+
           mockAuthSuccess()
           mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id))))
 
           val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = false, isGlobalEdit = false)(fakeRequest)
 
           status(result) mustBe SEE_OTHER
-          redirectLocation(result) mustBe Some(routes.FirstIncomeSourceController.show(id).url)
+          redirectLocation(result) mustBe Some(routes.FullIncomeSourceController.show(id).url)
         }
-        "in edit mode" in {
-          mockAuthSuccess()
-          mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id))))
+        "the remove accounting method feature switch is disabled" when {
+          "not in edit mode" in {
+            mockAuthSuccess()
+            mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id))))
 
-          val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = true, isGlobalEdit = false)(fakeRequest)
+            val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = false, isGlobalEdit = false)(fakeRequest)
 
-          status(result) mustBe SEE_OTHER
-          redirectLocation(result) mustBe Some(routes.FirstIncomeSourceController.show(id, isEditMode = true).url)
-        }
-        "in global edit mode" in {
-          mockAuthSuccess()
-          mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id))))
+            status(result) mustBe SEE_OTHER
+            redirectLocation(result) mustBe Some(routes.FirstIncomeSourceController.show(id).url)
+          }
+          "in edit mode" in {
+            mockAuthSuccess()
+            mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id))))
 
-          val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = false, isGlobalEdit = true)(fakeRequest)
+            val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = true, isGlobalEdit = false)(fakeRequest)
 
-          status(result) mustBe SEE_OTHER
-          redirectLocation(result) mustBe Some(routes.FirstIncomeSourceController.show(id, isGlobalEdit = true).url)
+            status(result) mustBe SEE_OTHER
+            redirectLocation(result) mustBe Some(routes.FirstIncomeSourceController.show(id, isEditMode = true).url)
+          }
+          "in global edit mode" in {
+            mockAuthSuccess()
+            mockFetchBusiness(id)(Right(Some(SoleTraderBusiness(id))))
+
+            val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = false, isGlobalEdit = true)(fakeRequest)
+
+            status(result) mustBe SEE_OTHER
+            redirectLocation(result) mustBe Some(routes.FirstIncomeSourceController.show(id, isGlobalEdit = true).url)
+          }
         }
       }
       "there is no business" when {
+        "the remove accounting method feature switch is enabled" in {
+          enable(RemoveAccountingMethod)
+
+          mockAuthSuccess()
+          mockFetchBusiness(id)(Right(None))
+
+          val result: Future[Result] = TestBusinessStartDateController.show(id = id, isEditMode = false, isGlobalEdit = false)(fakeRequest)
+
+          status(result) mustBe SEE_OTHER
+          redirectLocation(result) mustBe Some(routes.FullIncomeSourceController.show(id).url)
+        }
         "not in edit mode" in {
           mockAuthSuccess()
           mockFetchBusiness(id)(Right(None))

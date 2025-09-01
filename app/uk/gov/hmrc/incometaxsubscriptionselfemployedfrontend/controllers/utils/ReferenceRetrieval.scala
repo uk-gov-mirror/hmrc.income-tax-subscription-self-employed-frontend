@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.utils
 
+import com.google.inject.Inject
 import play.api.Logging
 import play.api.mvc.Result
 import play.api.mvc.Results.Redirect
@@ -23,6 +24,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.config.AppConfig
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.SessionDataService
 
+import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
 trait ReferenceRetrieval extends Logging {
@@ -34,12 +36,12 @@ trait ReferenceRetrieval extends Logging {
 
   def withIndividualReference(f: String => Future[Result])
                              (implicit hc: HeaderCarrier): Future[Result] = {
-    withReference(f, Redirect(appConfig.taskListUrl))
+    withReference(f, Redirect(appConfig.yourIncomeSourcesUrl))
   }
 
   def withAgentReference(f: String => Future[Result])
                         (implicit hc: HeaderCarrier): Future[Result] = {
-    withReference(f, Redirect(appConfig.clientTaskListUrl))
+    withReference(f, Redirect(appConfig.clientYourIncomeSourcesUrl))
   }
 
   private def withReference(f: String => Future[Result], redirectIfNotPresent: Result)
@@ -50,6 +52,22 @@ trait ReferenceRetrieval extends Logging {
       case Right(None) => Future.successful(redirectIfNotPresent)
       case Left(_) =>
         throw new InternalServerException(s"[ReferenceRetrieval][withReference] - Error occurred when fetching reference from session")
+    }
+  }
+
+}
+
+@Singleton
+class ReferenceRetrievalInj @Inject()(val sessionDataService: SessionDataService,
+                                      val appConfig: AppConfig)
+                                     (implicit val ec: ExecutionContext) {
+
+  def getReference(implicit hc: HeaderCarrier): Future[Option[String]] = {
+    sessionDataService.fetchReference map {
+      case Right(maybeReference) =>
+        maybeReference
+      case Left(_) =>
+        throw new InternalServerException(s"[ReferenceRetrievalInj][getReference] - Error occurred when fetching reference from session")
     }
   }
 

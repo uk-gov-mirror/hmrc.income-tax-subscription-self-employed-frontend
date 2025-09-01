@@ -322,6 +322,23 @@ trait ComponentSpecBase extends PlaySpec with CustomMatchers with GuiceOneServer
     )
   }
 
+  def getClientFullIncomeSource(id: String, isEditMode: Boolean, isGlobalEdit: Boolean): WSResponse = {
+    get(s"/client/details/sole-trader-business?id=$id&isEditMode=$isEditMode&isGlobalEdit=$isGlobalEdit")
+  }
+
+  def submitClientFullIncomeSource(trade: Option[String],
+                                   name: Option[String],
+                                   startDate: Option[DateModel],
+                                   startDateBeforeLimit: Option[Boolean],
+                                   id: String,
+                                   isEditMode: Boolean,
+                                   isGlobalEdit: Boolean): WSResponse = {
+    post(s"/client/details/sole-trader-business?id=$id&isEditMode=$isEditMode&isGlobalEdit=$isGlobalEdit")(
+      StreamlineIncomeSourceForm.createIncomeSourceData(trade, name, startDate, startDateBeforeLimit, None)
+        .map { case (k, v) => (k, Seq(v)) }
+    )
+  }
+
   def getFullIncomeSource(id: String, isEditMode: Boolean, isGlobalEdit: Boolean): WSResponse = {
     get(s"/details/sole-trader-business?id=$id&isEditMode=$isEditMode&isGlobalEdit=$isGlobalEdit")
   }

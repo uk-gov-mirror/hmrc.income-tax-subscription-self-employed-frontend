@@ -48,7 +48,7 @@ class ReferenceRetrievalSpec extends PlaySpec with MockSessionDataService with M
     "return the reference requested" when {
       "the reference was successfully returned from the session store" in {
         mockFetchReferenceSuccess(Some(reference))
-        when(mockAppConfig.taskListUrl) thenReturn testTaskListUrl
+        when(mockAppConfig.yourIncomeSourcesUrl) thenReturn testTaskListUrl
 
         val result = TestReferenceRetrieval.withIndividualReference { reference =>
           Future.successful(Ok(reference))
@@ -61,7 +61,7 @@ class ReferenceRetrievalSpec extends PlaySpec with MockSessionDataService with M
     "redirect to the individual task list page" when {
       "no reference was found in the session store" in {
         mockFetchReferenceSuccess(None)
-        when(mockAppConfig.taskListUrl) thenReturn testTaskListUrl
+        when(mockAppConfig.yourIncomeSourcesUrl) thenReturn testTaskListUrl
 
         val result = TestReferenceRetrieval.withIndividualReference { _ =>
           Future.successful(Redirect(testTaskListUrl))
@@ -74,7 +74,7 @@ class ReferenceRetrievalSpec extends PlaySpec with MockSessionDataService with M
     "throw an InternalServerException" when {
       "an error was returned from the session store" in {
         mockFetchReferenceFailure(INTERNAL_SERVER_ERROR)
-        when(mockAppConfig.taskListUrl) thenReturn testTaskListUrl
+        when(mockAppConfig.yourIncomeSourcesUrl) thenReturn testTaskListUrl
 
         intercept[InternalServerException](await(TestReferenceRetrieval.withIndividualReference { _ =>
           Future.successful(Ok("test-failure"))
@@ -87,7 +87,7 @@ class ReferenceRetrievalSpec extends PlaySpec with MockSessionDataService with M
     "return the reference requested" when {
       "the reference was successfully returned from the session store" in {
         mockFetchReferenceSuccess(Some(reference))
-        when(mockAppConfig.clientTaskListUrl) thenReturn testAgentTaskListUrl
+        when(mockAppConfig.clientYourIncomeSourcesUrl) thenReturn testAgentTaskListUrl
 
         val result = TestReferenceRetrieval.withAgentReference { reference =>
           Future.successful(Ok(reference))
@@ -100,7 +100,7 @@ class ReferenceRetrievalSpec extends PlaySpec with MockSessionDataService with M
     "redirect to the individual task list page" when {
       "no reference was found in the session store" in {
         mockFetchReferenceSuccess(None)
-        when(mockAppConfig.clientTaskListUrl) thenReturn testAgentTaskListUrl
+        when(mockAppConfig.clientYourIncomeSourcesUrl) thenReturn testAgentTaskListUrl
 
         val result = TestReferenceRetrieval.withAgentReference { _ =>
           Future.successful(Ok("test-redirect"))
@@ -113,7 +113,7 @@ class ReferenceRetrievalSpec extends PlaySpec with MockSessionDataService with M
     "throw an InternalServerException" when {
       "an error was returned from the session store" in {
         mockFetchReferenceFailure(INTERNAL_SERVER_ERROR)
-        when(mockAppConfig.clientTaskListUrl) thenReturn testAgentTaskListUrl
+        when(mockAppConfig.clientYourIncomeSourcesUrl) thenReturn testAgentTaskListUrl
 
         intercept[InternalServerException](await(TestReferenceRetrieval.withAgentReference { _ =>
           Future.successful(Ok("test-failure"))
