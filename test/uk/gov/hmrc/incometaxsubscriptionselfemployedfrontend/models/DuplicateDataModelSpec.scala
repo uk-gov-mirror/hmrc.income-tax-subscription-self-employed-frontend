@@ -22,7 +22,7 @@ import uk.gov.hmrc.crypto.{Decrypter, Encrypter, SymmetricCryptoFactory}
 
 import java.util.UUID
 
-class NameAndTradeModelSpec extends PlaySpec {
+class DuplicateDataModelSpec extends PlaySpec {
 
   val mockPort = "11111"
   val mockHost = "localhost"
@@ -31,7 +31,7 @@ class NameAndTradeModelSpec extends PlaySpec {
   def random: String =
     UUID.randomUUID().toString
 
-  val model = NameAndTradeModel(
+  val model = DuplicateDataModel(
     reference = random,
     id = random,
     name = random,
@@ -46,7 +46,7 @@ class NameAndTradeModelSpec extends PlaySpec {
   )
 
   implicit lazy val crypto: Encrypter with Decrypter = SymmetricCryptoFactory.aesCrypto(config.getOrElse(KEY, throw new Exception()))
-  implicit lazy val format: OFormat[NameAndTradeModel] = NameAndTradeModel.encryptedFormat
+  implicit lazy val format: OFormat[DuplicateDataModel] = DuplicateDataModel.encryptedFormat
 
   "NameAndTradeModel" should {
     "read/write Json correctly" in {

@@ -31,6 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCrypto,
+                                               duplicateDataService: DuplicateDataService,
                                                incomeTaxSubscriptionConnector: IncomeTaxSubscriptionConnector)
                                               (implicit ec: ExecutionContext) {
 
@@ -85,7 +86,7 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
       result map {
         case Some(SoleTraderBusinesses(businesses, maybeAccountingMethod)) =>
           businesses.find(_.id == id) match {
-            case None => getNameAndTrade(reference, id) map {
+            case None => duplicateDataService.getDuplicateData(reference, id) map {
               case Right(nameAndTrade) =>
                 StreamlineBusiness(
                   trade = nameAndTrade.map(_.trade),
@@ -263,19 +264,6 @@ class MultipleSelfEmploymentsService @Inject()(applicationCrypto: ApplicationCry
         case None => Seq.empty[(String, Option[String], Option[String])]
       }
     }
-  }
-
-  def saveNameAndTrade(
-    model: NameAndTradeModel
-  )(implicit hc: HeaderCarrier): Future[Either[GetSelfEmploymentsFailure, Boolean]] = {
-    Future.successful(Right(true))
-  }
-
-  def getNameAndTrade(
-    reference: String,
-    id: String
-  )(implicit hc: HeaderCarrier): Future[Either[GetSelfEmploymentsFailure, Option[NameAndTradeModel]]] = {
-    Future.successful(Right(None))
   }
 }
 

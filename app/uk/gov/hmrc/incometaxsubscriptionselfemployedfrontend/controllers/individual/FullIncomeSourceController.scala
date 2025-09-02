@@ -28,9 +28,9 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.Duplica
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.controllers.utils.ReferenceRetrieval
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.individual.StreamlineIncomeSourceForm
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.agent.StreamlineBusiness
-import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.{NameAndTradeModel, No, Yes}
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.{DuplicateDataModel, No, Yes}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.MultipleSelfEmploymentsService.SaveSelfEmploymentDataDuplicates
-import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.{AuthService, MultipleSelfEmploymentsService, SessionDataService}
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.{AuthService, DuplicateDataService, MultipleSelfEmploymentsService, SessionDataService}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities.ImplicitDateFormatter
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.individual.FullIncomeSource
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -44,6 +44,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class FullIncomeSourceController @Inject()(fullIncomeSource: FullIncomeSource,
                                            mcc: MessagesControllerComponents,
                                            multipleSelfEmploymentsService: MultipleSelfEmploymentsService,
+                                           duplicateDataService: DuplicateDataService,
                                            authService: AuthService)
                                           (val sessionDataService: SessionDataService,
                                            val languageUtils: LanguageUtils,
@@ -102,7 +103,7 @@ class FullIncomeSourceController @Inject()(fullIncomeSource: FullIncomeSource,
                   })
                 case Left(SaveSelfEmploymentDataDuplicates) =>
                   DuplicatesController.duplicatesFound(
-                    multipleSelfEmploymentsService,
+                    duplicateDataService,
                     reference,
                     id,
                     trade,

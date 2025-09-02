@@ -20,8 +20,8 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.Results.Redirect
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
-import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.NameAndTradeModel
-import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.MultipleSelfEmploymentsService
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.DuplicateDataModel
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.{DuplicateDataService, MultipleSelfEmploymentsService}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
@@ -30,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class DuplicatesController @Inject()(
   mcc: MessagesControllerComponents,
-  multipleSelfEmploymentsService: MultipleSelfEmploymentsService,
+  duplicateDataService: DuplicateDataService,
 )(implicit val ec: ExecutionContext)
 extends FrontendController(mcc) with I18nSupport {
   def show(): Action[AnyContent] = Action.async { implicit request =>
@@ -38,9 +38,9 @@ extends FrontendController(mcc) with I18nSupport {
     val id = request.session.get("id")
     (reference, id) match {
       case (Some(reference), Some(id)) =>
-        multipleSelfEmploymentsService.getNameAndTrade(reference, id).map {
+        duplicateDataService.getDuplicateData(reference, id).map {
           case Right(optModel) =>
-            val model: NameAndTradeModel = optModel.getOrElse(throw new InternalServerException("[DuplicatesController][show] - No data for trade/name."))
+            val model: DuplicateDataModel = optModel.getOrElse(throw new InternalServerException("[DuplicatesController][show] - No data for trade/name."))
             ???
           case _ =>
             throw new InternalServerException("[DuplicatesController][show] - No data for trade/name.")
@@ -53,14 +53,14 @@ extends FrontendController(mcc) with I18nSupport {
 
 object DuplicatesController {
   def duplicatesFound(
-    multipleSelfEmploymentsService: MultipleSelfEmploymentsService,
+    duplicateDataService: DuplicateDataService,
     reference: String,
     id: String,
     trade: String,
     name: String,
     isAgent: Boolean
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
-    multipleSelfEmploymentsService.saveNameAndTrade(NameAndTradeModel(
+    duplicateDataService.saveDuplicateData(DuplicateDataModel(
       reference = reference,
       id = id,
       name = name,

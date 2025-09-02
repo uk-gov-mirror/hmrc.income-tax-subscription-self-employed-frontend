@@ -22,7 +22,7 @@ import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.crypto.json.JsonEncryption
 
-case class NameAndTradeModel(
+case class DuplicateDataModel(
   reference: String,
   id: String,
   name: String,
@@ -30,19 +30,19 @@ case class NameAndTradeModel(
   isAgent: Boolean
 )
 
-object NameAndTradeModel {
-  def encryptedFormat(implicit crypto: Encrypter with Decrypter): OFormat[NameAndTradeModel] = {
+object DuplicateDataModel {
+  def encryptedFormat(implicit crypto: Encrypter with Decrypter): OFormat[DuplicateDataModel] = {
 
     implicit val sensitiveFormat: Format[SensitiveString] = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)
 
-    val reads: Reads[NameAndTradeModel] = (
+    val reads: Reads[DuplicateDataModel] = (
       (__ \ "reference").read[String] and
         (__ \ "id").read[String] and
         (__ \ "name").read[SensitiveString] and
         (__ \ "trade").read[String] and
         (__ \ "agent").read[Boolean]
       )((reference, id, name, trade, isAgent) =>
-        NameAndTradeModel.apply(
+        DuplicateDataModel.apply(
           reference = reference,
           id = id,
           name = name.decryptedValue,
@@ -51,7 +51,7 @@ object NameAndTradeModel {
         )
     )
 
-    val writes: OWrites[NameAndTradeModel] = (
+    val writes: OWrites[DuplicateDataModel] = (
       (__ \ "reference").write[String] and
         (__ \ "id").write[String] and
         (__ \ "name").write[SensitiveString] and

@@ -29,7 +29,7 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.agent.Streaml
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.forms.agent.StreamlineIncomeSourceForm.nextIncomeSourceForm
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.{ClientDetails, No, Yes}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.MultipleSelfEmploymentsService.SaveSelfEmploymentDataDuplicates
-import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.{AuthService, ClientDetailsRetrieval, MultipleSelfEmploymentsService, SessionDataService}
+import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services.{AuthService, ClientDetailsRetrieval, DuplicateDataService, MultipleSelfEmploymentsService, SessionDataService}
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.utilities.ImplicitDateFormatter
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.views.html.agent.NextIncomeSource
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -43,6 +43,7 @@ class NextIncomeSourceController @Inject()(nextIncomeSource: NextIncomeSource,
                                            clientDetailsRetrieval: ClientDetailsRetrieval,
                                            mcc: MessagesControllerComponents,
                                            multipleSelfEmploymentsService: MultipleSelfEmploymentsService,
+                                           duplicateDataService: DuplicateDataService,
                                            authService: AuthService)
                                           (val sessionDataService: SessionDataService,
                                            val languageUtils: LanguageUtils,
@@ -136,7 +137,7 @@ class NextIncomeSourceController @Inject()(nextIncomeSource: NextIncomeSource,
         })
       case Left(SaveSelfEmploymentDataDuplicates) =>
         DuplicatesController.duplicatesFound(
-          multipleSelfEmploymentsService,
+          duplicateDataService,
           reference,
           id,
           trade,

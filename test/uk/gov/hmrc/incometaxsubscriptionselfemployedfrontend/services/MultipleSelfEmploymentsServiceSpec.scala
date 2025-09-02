@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.services
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
@@ -27,6 +29,7 @@ import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models._
 import uk.gov.hmrc.incometaxsubscriptionselfemployedfrontend.models.agent.StreamlineBusiness
 
 import java.util.UUID
+import scala.concurrent.Future
 
 class MultipleSelfEmploymentsServiceSpec extends PlaySpec with MockIncomeTaxSubscriptionConnector {
 
@@ -34,8 +37,15 @@ class MultipleSelfEmploymentsServiceSpec extends PlaySpec with MockIncomeTaxSubs
 
   trait Setup {
 
+    val mockDuplicateDataService = mock[DuplicateDataService]
+
+    when(mockDuplicateDataService.getDuplicateData(any(), any())(any())).thenReturn(
+      Future.successful(Right(None))
+    )
+
     val service: MultipleSelfEmploymentsService = new MultipleSelfEmploymentsService(
       applicationCrypto = applicationCrypto,
+      duplicateDataService = mockDuplicateDataService,
       incomeTaxSubscriptionConnector = mockIncomeTaxSubscriptionConnector
     )
 
