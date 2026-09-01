@@ -213,12 +213,14 @@ agent.duplicate-details.options.return-to-income-sources   = ewch i’r rhestr o
 individual.uk-address-confirmation.title                   = A yw cyfeiriad eich busnes yn y DU?
 individual.uk-address-confirmation.heading                 = A yw’r cyfeiriad ar gyfer eich busnes, {0} yn y DU?
 individual.uk-address-confirmation.heading.caption         = Unig fasnachwr
+individual.uk-address-confirmation.hidden                  = Dewiswch os yw cyfeiriad eich busnes unig fasnachwr yn y DU
 error.individual.uk-address-confirmation.empty             = Dewiswch os yw cyfeiriad y busnes yn y DU
 
 # Agent UK Address Confirmation
 agent.uk-address-confirmation.title                        = A yw cyfeiriad eich busnes yn y DU?
 agent.uk-address-confirmation.heading                      = A yw’r cyfeiriad ar gyfer busnes eich cleient, {0} yn y DU?
 agent.uk-address-confirmation.heading.caption              = {0} – {1}
+agent.uk-address-confirmation.hidden                       = Dewiswch os yw cyfeiriad busnes unig fasnachwr eich cleient yn y DU
 error.agent.uk-address-confirmation.empty                  = Dewiswch os yw cyfeiriad y busnes yn y DU
 
 # Address lookup labels

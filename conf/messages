@@ -211,6 +211,7 @@ agent.duplicate-details.options.return-to-income-sources   = go to your client�
 # Individual UK Address Confirmation
 individual.uk-address-confirmation.title                   = Is the business address in the UK?
 individual.uk-address-confirmation.heading                 = Is the address for your business, {0} in the UK?
+individual.uk-address-confirmation.hidden                  = Select if your sole trader business address is in the UK
 individual.uk-address-confirmation.heading.caption         = Sole trader
 error.individual.uk-address-confirmation.empty             = Select if business address is in the UK
 
@@ -218,6 +219,7 @@ error.individual.uk-address-confirmation.empty             = Select if business 
 agent.uk-address-confirmation.title                        = Is the business address in the UK?
 agent.uk-address-confirmation.heading                      = Is the address for your client’s business, {0} in the UK?
 agent.uk-address-confirmation.heading.caption              = {0} – {1}
+agentuk-address-confirmation.hidden                        = Select if your client's sole trader business address is in the UK
 error.agent.uk-address-confirmation.empty                  = Select if business address is in the UK
 
 # Address lookup labels

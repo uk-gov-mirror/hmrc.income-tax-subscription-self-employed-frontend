@@ -37,12 +37,10 @@
 
         <p class="govuk-body">@messages("business.start-date.caption")</p>
 
-        <h2 class="govuk-heading-m" id="business-start-date.line-1">@messages("business.start-date.paragraph")</h2>
-
         @dateHelper(
             field = businessStartDateForm(startDate),
-            legendContent = messages("business.start-date.heading"),
-            isLegendVisible = false,
+            legendContent = messages("business.start-date.paragraph"),
+            isLegendVisible = true,
             parentForm = businessStartDateForm,
             hintText = Some(messages("business.start-date.hint", AccountingPeriodUtil.getStartDateLimit.getYear.toString)),
             isPageHeading = false
