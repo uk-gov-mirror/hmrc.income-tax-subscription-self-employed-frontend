@@ -35,6 +35,7 @@ class BusinessStartDateViewSpec extends ViewSpec {
     val title = "Sole trader"
     val titleSuffix = " - Sign up for Making Tax Digital for Income Tax - GOV.UK"
     val heading: String = "Business start date"
+    val legend: String = "When did your business start trading?"
     val Paragraph = "The date your business started trading can be today, in the past or up to 7 days in the future."
     val question: String = "When did your business start trading?"
     val hint = s"For example, 27 9 $year"
@@ -79,23 +80,19 @@ class BusinessStartDateViewSpec extends ViewSpec {
       document.mainContent.getParagraphNth() mustBe BusinessStartDateMessages.Paragraph
     }
 
-    "have a question" in new Setup {
-      document.mainContent.selectHead("h2").text() mustBe BusinessStartDateMessages.question
-    }
-
     "have a Form" in new Setup {
       document.getForm.attr("method") mustBe testCall.method
       document.getForm.attr("action") mustBe testCall.url
     }
 
-    "has the correct date input field with the legend as the page heading" when {
+    "has the correct date input field with the legend as the expected message" when {
       "there is no error on the page" in new Setup {
         document.getForm.mustHaveDateInput(
           id = "startDate",
-          legend = BusinessStartDateMessages.heading,
+          legend = BusinessStartDateMessages.legend,
           exampleDate = BusinessStartDateMessages.hint,
           isHeading = false,
-          isLegendHidden = true,
+          isLegendHidden = false,
           dateInputsValues = Seq(
             DateInputFieldValues("Day", None),
             DateInputFieldValues("Month", None),
@@ -112,11 +109,11 @@ class BusinessStartDateViewSpec extends ViewSpec {
       ) {
         document.mustHaveDateInput(
           id = "startDate",
-          legend = BusinessStartDateMessages.heading,
+          legend = BusinessStartDateMessages.legend,
           exampleDate = BusinessStartDateMessages.hint,
           errorMessage = Some(BusinessStartDateMessages.empty),
           isHeading = false,
-          isLegendHidden = true,
+          isLegendHidden = false,
           dateInputsValues = Seq(
             DateInputFieldValues("Day", None),
             DateInputFieldValues("Month", None),
@@ -134,11 +131,11 @@ class BusinessStartDateViewSpec extends ViewSpec {
 
         document.mustHaveDateInput(
           id = "startDate",
-          legend = BusinessStartDateMessages.heading,
+          legend = BusinessStartDateMessages.legend,
           exampleDate = BusinessStartDateMessages.hint,
           errorMessage = Some(BusinessStartDateMessages.maxDate),
           isHeading = false,
-          isLegendHidden = true,
+          isLegendHidden = false,
           dateInputsValues = Seq(
             DateInputFieldValues("Day", None),
             DateInputFieldValues("Month", None),
@@ -157,11 +154,11 @@ class BusinessStartDateViewSpec extends ViewSpec {
 
           document.mustHaveDateInput(
             id = "startDate",
-            legend = BusinessStartDateMessages.heading,
+            legend = BusinessStartDateMessages.legend,
             exampleDate = BusinessStartDateMessages.hint,
             errorMessage = Some(BusinessStartDateMessages.minDate),
             isHeading = false,
-            isLegendHidden = true,
+            isLegendHidden = false,
             dateInputsValues = Seq(
               DateInputFieldValues("Day", None),
               DateInputFieldValues("Month", None),

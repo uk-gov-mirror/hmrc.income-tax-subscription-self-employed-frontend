@@ -54,6 +54,7 @@ class UkAddressConfirmationViewSpec extends ViewSpec {
   object UkAddressConfirmationMessages {
     val title = "Is the business address in the UK?"
     val heading = s"Is the address for your business, $testName in the UK?"
+    val hidden = "Select if your sole trader business address is in the UK"
     val caption = "Sole trader"
 
     object Form {
@@ -103,7 +104,7 @@ class UkAddressConfirmationViewSpec extends ViewSpec {
           selector = "fieldset"
         )(
           name = fieldName,
-          legend = UkAddressConfirmationMessages.heading,
+          legend = UkAddressConfirmationMessages.hidden,
           isHeading = false,
           isLegendHidden = true,
           hint = None,

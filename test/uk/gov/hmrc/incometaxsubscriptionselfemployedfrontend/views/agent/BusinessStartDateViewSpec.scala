@@ -32,6 +32,7 @@ class BusinessStartDateViewSpec extends ViewSpec with FeatureSwitching {
     val title: String = "Sole trader"
     val caption: String = "FirstName LastName – ZZ 11 11 11 Z"
     val heading: String = "Business start date"
+    val legend: String = "When did your client’s business start trading?"
     val para: String = "The date your client’s business started trading can be today, in the past or up to 7 days in the future."
     val question: String = "When did your client’s business start trading?"
     val hint: String = s"For example, 27 9 ${AccountingPeriodUtil.getCurrentTaxYearStartDate.getYear}"
@@ -93,10 +94,6 @@ class BusinessStartDateViewSpec extends ViewSpec with FeatureSwitching {
       document().mainContent.selectHead("p").text mustBe BusinessStartDateMessages.para
     }
 
-    "have a question" in {
-      document().mainContent.selectNth("h2", 2).text mustBe BusinessStartDateMessages.question
-    }
-
     "have a form" which {
       "has the correct action and method assigned" in {
         val form: Element = document().getForm
@@ -104,14 +101,14 @@ class BusinessStartDateViewSpec extends ViewSpec with FeatureSwitching {
         form.attr("action") mustBe testCall.url
       }
 
-      "has a correct date input field with the legend as the page heading" when {
+      "has a correct date input field with the legend as the expected message" when {
         "there is no error on the page" in {
           document().getForm.mustHaveDateInput(
             id = "startDate",
-            legend = BusinessStartDateMessages.heading,
+            legend = BusinessStartDateMessages.legend,
             exampleDate = BusinessStartDateMessages.hint,
             isHeading = false,
-            isLegendHidden = true,
+            isLegendHidden = false,
             dateInputsValues = Seq(
               DateInputFieldValues("Day", None),
               DateInputFieldValues("Month", None),
@@ -125,11 +122,11 @@ class BusinessStartDateViewSpec extends ViewSpec with FeatureSwitching {
 
           doc.mustHaveDateInput(
             id = "startDate",
-            legend = BusinessStartDateMessages.heading,
+            legend = BusinessStartDateMessages.legend,
             exampleDate = BusinessStartDateMessages.hint,
             errorMessage = Some(BusinessStartDateMessages.emptyError),
             isHeading = false,
-            isLegendHidden = true,
+            isLegendHidden = false,
             dateInputsValues = Seq(
               DateInputFieldValues("Day", None),
               DateInputFieldValues("Month", None),
@@ -143,11 +140,11 @@ class BusinessStartDateViewSpec extends ViewSpec with FeatureSwitching {
 
           doc.mustHaveDateInput(
             id = "startDate",
-            legend = BusinessStartDateMessages.heading,
+            legend = BusinessStartDateMessages.legend,
             exampleDate = BusinessStartDateMessages.hint,
             errorMessage = Some(BusinessStartDateMessages.dateTooLateError),
             isHeading = false,
-            isLegendHidden = true,
+            isLegendHidden = false,
             dateInputsValues = Seq(
               DateInputFieldValues("Day", None),
               DateInputFieldValues("Month", None),
@@ -161,11 +158,11 @@ class BusinessStartDateViewSpec extends ViewSpec with FeatureSwitching {
 
           doc.mustHaveDateInput(
             id = "startDate",
-            legend = BusinessStartDateMessages.heading,
+            legend = BusinessStartDateMessages.legend,
             exampleDate = BusinessStartDateMessages.hint,
             errorMessage = Some(BusinessStartDateMessages.dateTooEarlyError),
             isHeading = false,
-            isLegendHidden = true,
+            isLegendHidden = false,
             dateInputsValues = Seq(
               DateInputFieldValues("Day", None),
               DateInputFieldValues("Month", None),
