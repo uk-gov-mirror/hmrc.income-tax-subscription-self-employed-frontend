@@ -219,7 +219,7 @@ error.individual.uk-address-confirmation.empty             = Select if business 
 agent.uk-address-confirmation.title                        = Is the business address in the UK?
 agent.uk-address-confirmation.heading                      = Is the address for your client’s business, {0} in the UK?
 agent.uk-address-confirmation.heading.caption              = {0} – {1}
-agentuk-address-confirmation.hidden                        = Select if your client's sole trader business address is in the UK
+agent.uk-address-confirmation.hidden                        = Select if your client's sole trader business address is in the UK
 error.agent.uk-address-confirmation.empty                  = Select if business address is in the UK
 
 # Address lookup labels

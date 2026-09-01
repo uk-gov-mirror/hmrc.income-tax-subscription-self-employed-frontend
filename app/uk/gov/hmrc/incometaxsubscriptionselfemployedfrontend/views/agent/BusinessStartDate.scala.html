@@ -45,12 +45,10 @@
 
         <p class="govuk-body">@messages("business.agent.start-date.para")</p>
 
-        <h2 class="govuk-heading-m">@messages("business.agent.start-date.question")</h2>
-
         @dateHelper(
             field = businessStartDateForm(startDate),
-            legendContent = messages("business.agent.start-date.heading", businessTrade),
-            isLegendVisible = false,
+            legendContent = messages("business.agent.start-date.question"),
+            isLegendVisible = true,
             parentForm = businessStartDateForm,
             hintText = Some(messages("business.agent.start-date.hint", AccountingPeriodUtil.getCurrentTaxYearStartDate.getYear.toString)),
             isPageHeading = false

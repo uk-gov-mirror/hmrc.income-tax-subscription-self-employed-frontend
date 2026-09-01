@@ -47,7 +47,7 @@
     @form(action = postAction) {
         @radioHelper(
             field = confirmationForm(UkAddressConfirmationForm.fieldName),
-            legend = messages("individual.uk-address-confirmation.heading", name),
+            legend = messages("individual.uk-address-confirmation.hidden", name),
             isPageHeading = false,
             radioItems = Seq(
                 RadioItem(
