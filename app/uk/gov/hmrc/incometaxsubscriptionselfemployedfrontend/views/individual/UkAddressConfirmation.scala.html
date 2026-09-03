@@ -33,22 +33,12 @@
 
 @mainTemplate(title = messages("individual.uk-address-confirmation.title"), optForm = Some(confirmationForm)) {
 
-    @pageHeadingHelper(
-        heading = messages("individual.uk-address-confirmation.heading", name),
-        caption = messages("individual.uk-address-confirmation.heading.caption"),
-        isSection = true
-    )
-
-    @yesNoFormAndButtons()
-
-}
-
-@yesNoFormAndButtons() = {
     @form(action = postAction) {
+        <span class="govuk-caption-l">@messages("base.sole-trader-caption")</span>
         @radioHelper(
             field = confirmationForm(UkAddressConfirmationForm.fieldName),
-            legend = messages("individual.uk-address-confirmation.hidden", name),
-            isPageHeading = false,
+            legend = messages("individual.uk-address-confirmation.heading", name),
+            isPageHeading = true,
             radioItems = Seq(
                 RadioItem(
                     content = Text(messages("base.yes")),

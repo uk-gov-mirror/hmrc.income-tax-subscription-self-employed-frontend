@@ -56,7 +56,6 @@ class UkAddressConfirmationViewSpec extends ViewSpec {
   object UkAddressConfirmationMessages {
     val title = "Is the business address in the UK?"
     val heading = s"Is the address for your client’s business, $testName in the UK?"
-    val hidden = "Select if your clients sole trader business address is in the UK"
     val caption = s"${testDetails.name} – ${testDetails.nino.grouped(2).mkString(" ")}"
 
     object Form {
@@ -85,12 +84,8 @@ class UkAddressConfirmationViewSpec extends ViewSpec {
       )
     }
 
-    "have the correct heading and caption" in {
-      document().mainContent.mustHaveHeadingAndCaption(
-        heading = UkAddressConfirmationMessages.heading,
-        caption = UkAddressConfirmationMessages.caption,
-        isSection = false
-      )
+    "have the correct caption" in {
+      document().mainContent.selectHead(".govuk-caption-l").text mustBe UkAddressConfirmationMessages.caption
     }
 
     "have a form" which {
@@ -106,9 +101,9 @@ class UkAddressConfirmationViewSpec extends ViewSpec {
           selector = "fieldset"
         )(
           name = fieldName,
-          legend = UkAddressConfirmationMessages.hidden,
-          isHeading = false,
-          isLegendHidden = true,
+          legend = UkAddressConfirmationMessages.heading,
+          isHeading = true,
+          isLegendHidden = false,
           hint = None,
           errorMessage = None,
           radioContents = Seq(
